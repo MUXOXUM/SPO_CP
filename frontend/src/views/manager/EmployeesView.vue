@@ -8,163 +8,173 @@
           <span>Добавить сотрудника</span>
         </button>
       </div>
-    </div>
-
-    <!-- Search -->
-    <div class="filters">
-      <div class="search-container">
-        <span class="material-icons search-icon">search</span>
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Поиск по имени или email..."
-          class="search-input"
-        >
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Управление сотрудниками</h1>
+        <button @click="showAddModal = true" class="add-btn">
+          <span class="material-icons">add</span>
+          <span>Добавить сотрудника</span>
+        </button>
       </div>
     </div>
 
-    <!-- Employees Table -->
-    <div class="table-container">
-      <table class="employees-table">
-        <thead>
-          <tr>
-            <th>Имя</th>
-            <th>Email</th>
-            <th>Роль</th>
-            <th>Статус</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="employee in filteredEmployees" :key="employee.id">
-            <td>{{ `${employee.firstName} ${employee.lastName}` }}</td>
-            <td>{{ employee.email }}</td>
-            <td>
-              <span class="role-badge" :class="employee.role">
-                {{ getRoleName(employee.role) }}
-              </span>
-            </td>
-            <td>
-              <span class="status-badge" :class="{ active: employee.isActive }">
-                {{ employee.isActive ? 'Активен' : 'Неактивен' }}
-              </span>
-            </td>
-            <td class="actions">
-              <button @click="editEmployee(employee)" class="icon-btn edit-btn" title="Изменить">
-                <span class="material-icons">edit</span>
-              </button>
-              <button 
-                v-if="employee.role !== 'admin'"
-                @click="confirmDelete(employee)" 
-                class="icon-btn delete-btn"
-                title="Удалить"
-              >
-                <span class="material-icons">delete</span>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Add/Edit Modal -->
-    <div v-if="showAddModal || editingEmployee" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>{{ editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника' }}</h2>
-          <button @click="closeModal" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
+    <div class="employees-content">
+      <!-- Search -->
+      <div class="filters">
+        <div class="search-container">
+          <span class="material-icons search-icon">search</span>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Поиск по имени или email..."
+            class="search-input"
+          >
         </div>
-        <form @submit.prevent="handleSubmit" class="employee-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Имя:</label>
-              <input v-model="employeeForm.firstName" required placeholder="Введите имя">
-            </div>
-            <div class="form-group">
-              <label>Фамилия:</label>
-              <input v-model="employeeForm.lastName" required placeholder="Введите фамилию">
-            </div>
+      </div>
+
+      <!-- Employees Table -->
+      <div class="table-container">
+        <table class="employees-table">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Email</th>
+              <th>Роль</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="employee in filteredEmployees" :key="employee.id">
+              <td>{{ `${employee.firstName} ${employee.lastName}` }}</td>
+              <td>{{ employee.email }}</td>
+              <td>
+                <span class="role-badge" :class="employee.role">
+                  {{ getRoleName(employee.role) }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" :class="{ active: employee.isActive }">
+                  {{ employee.isActive ? 'Активен' : 'Неактивен' }}
+                </span>
+              </td>
+              <td class="actions">
+                <button @click="editEmployee(employee)" class="icon-btn edit-btn" title="Изменить">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button 
+                  v-if="employee.role !== 'admin'"
+                  @click="confirmDelete(employee)" 
+                  class="icon-btn delete-btn"
+                  title="Удалить"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add/Edit Modal -->
+      <div v-if="showAddModal || editingEmployee" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>{{ editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника' }}</h2>
+            <button @click="closeModal" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Email:</label>
-              <input 
-                v-model="employeeForm.email" 
-                type="email" 
-                required
-                :disabled="editingEmployee"
-                placeholder="Введите email"
-              >
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Роль:</label>
-              <div class="select-container">
-                <select v-model="employeeForm.role" required>
-                  <option value="" disabled selected>Выберите роль</option>
-                  <option value="admin">Администратор</option>
-                  <option value="manager">Менеджер</option>
-                </select>
-                <span class="material-icons select-icon">expand_more</span>
+          <form @submit.prevent="handleSubmit" class="employee-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Имя:</label>
+                <input v-model="employeeForm.firstName" required placeholder="Введите имя">
+              </div>
+              <div class="form-group">
+                <label>Фамилия:</label>
+                <input v-model="employeeForm.lastName" required placeholder="Введите фамилию">
               </div>
             </div>
-            <div v-if="!editingEmployee" class="form-group">
-              <label>Пароль:</label>
-              <input v-model="employeeForm.password" type="password" required placeholder="Введите пароль">
-            </div>
-          </div>
-          <div v-if="editingEmployee" class="form-group">
-            <label>Статус:</label>
-            <div class="toggle-container">
-              <label class="toggle">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email:</label>
                 <input 
-                  type="checkbox" 
-                  v-model="employeeForm.isActive"
+                  v-model="employeeForm.email" 
+                  type="email" 
+                  required
+                  :disabled="editingEmployee"
+                  placeholder="Введите email"
                 >
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-label">{{ employeeForm.isActive ? 'Активен' : 'Неактивен' }}</span>
+              </div>
             </div>
-          </div>
-          <div class="modal-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">
-              <span>Отмена</span>
-            </button>
-            <button type="submit" class="save-btn">
-              <span class="material-icons">{{ editingEmployee ? 'save' : 'add' }}</span>
-              <span>{{ editingEmployee ? 'Сохранить' : 'Добавить' }}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Подтверждение удаления</h2>
-          <button @click="showDeleteModal = false" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Роль:</label>
+                <div class="select-container">
+                  <select v-model="employeeForm.role" required>
+                    <option value="" disabled selected>Выберите роль</option>
+                    <option value="admin">Администратор</option>
+                    <option value="manager">Менеджер</option>
+                  </select>
+                  <span class="material-icons select-icon">expand_more</span>
+                </div>
+              </div>
+              <div v-if="!editingEmployee" class="form-group">
+                <label>Пароль:</label>
+                <input v-model="employeeForm.password" type="password" required placeholder="Введите пароль">
+              </div>
+            </div>
+            <div v-if="editingEmployee" class="form-group">
+              <label>Статус:</label>
+              <div class="toggle-container">
+                <label class="toggle">
+                  <input 
+                    type="checkbox" 
+                    v-model="employeeForm.isActive"
+                  >
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label">{{ employeeForm.isActive ? 'Активен' : 'Неактивен' }}</span>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" @click="closeModal" class="cancel-btn">
+                <span>Отмена</span>
+              </button>
+              <button type="submit" class="save-btn">
+                <span class="material-icons">{{ editingEmployee ? 'save' : 'add' }}</span>
+                <span>{{ editingEmployee ? 'Сохранить' : 'Добавить' }}</span>
+              </button>
+            </div>
+          </form>
         </div>
-        <div class="modal-content">
-          <div class="warning-message">
-            <span class="material-icons warning-icon">warning</span>
-            <p>Вы уверены, что хотите удалить сотрудника "{{ employeeToDelete?.firstName }} {{ employeeToDelete?.lastName }}"?</p>
-            <p class="warning-subtext">Это действие нельзя отменить.</p>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div v-if="showDeleteModal" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Подтверждение удаления</h2>
+            <button @click="showDeleteModal = false" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
           </div>
-          <div class="modal-actions">
-            <button @click="showDeleteModal = false" class="cancel-btn">
-              <span>Отмена</span>
-            </button>
-            <button @click="deleteEmployee" class="delete-btn">
-              <span class="material-icons">delete</span>
-              <span>Удалить</span>
-            </button>
+          <div class="modal-content">
+            <div class="warning-message">
+              <span class="material-icons warning-icon">warning</span>
+              <p>Вы уверены, что хотите удалить сотрудника "{{ employeeToDelete?.firstName }} {{ employeeToDelete?.lastName }}"?</p>
+              <p class="warning-subtext">Это действие нельзя отменить.</p>
+            </div>
+            <div class="modal-actions">
+              <button @click="showDeleteModal = false" class="cancel-btn">
+                <span>Отмена</span>
+              </button>
+              <button @click="deleteEmployee" class="delete-btn">
+                <span class="material-icons">delete</span>
+                <span>Удалить</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -302,12 +312,14 @@ onMounted(() => {
 }
 
 .page-header {
+.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.header-content {
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -318,10 +330,17 @@ onMounted(() => {
 }
 
 .page-header h1 {
+.page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
+}
+
+.employees-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .add-btn {

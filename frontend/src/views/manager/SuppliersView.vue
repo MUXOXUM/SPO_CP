@@ -10,139 +10,141 @@
       </div>
     </div>
 
-    <!-- Search -->
-    <div class="filters">
-      <div class="search-container">
-        <span class="material-icons search-icon">search</span>
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Поиск по названию или контактному лицу..."
-          class="search-input"
-        >
+    <div class="suppliers-content">
+      <!-- Search -->
+      <div class="filters">
+        <div class="search-container">
+          <span class="material-icons search-icon">search</span>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Поиск по названию или контактному лицу..."
+            class="search-input"
+          >
+        </div>
       </div>
-    </div>
 
-    <!-- Suppliers Table -->
-    <div class="table-container">
-      <table class="suppliers-table">
-        <thead>
-          <tr>
-            <th>Название</th>
-            <th>Контактное лицо</th>
-            <th>Email</th>
-            <th>Телефон</th>
-            <th>Адрес</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="supplier in filteredSuppliers" :key="supplier.id">
-            <td>{{ supplier.name }}</td>
-            <td>{{ supplier.contactPerson }}</td>
-            <td>{{ supplier.email }}</td>
-            <td>{{ supplier.phone }}</td>
-            <td>{{ supplier.address }}</td>
-            <td class="actions">
-              <button @click="editSupplier(supplier)" class="icon-btn edit-btn" title="Изменить">
-                <span class="material-icons">edit</span>
+      <!-- Suppliers Table -->
+      <div class="table-container">
+        <table class="suppliers-table">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Контактное лицо</th>
+              <th>Email</th>
+              <th>Телефон</th>
+              <th>Адрес</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="supplier in filteredSuppliers" :key="supplier.id">
+              <td>{{ supplier.name }}</td>
+              <td>{{ supplier.contactPerson }}</td>
+              <td>{{ supplier.email }}</td>
+              <td>{{ supplier.phone }}</td>
+              <td>{{ supplier.address }}</td>
+              <td class="actions">
+                <button @click="editSupplier(supplier)" class="icon-btn edit-btn" title="Изменить">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button @click="deleteSupplier(supplier)" class="icon-btn delete-btn" title="Удалить">
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add/Edit Modal -->
+      <div v-if="showModal" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>{{ isEditing ? 'Редактировать поставщика' : 'Добавить поставщика' }}</h2>
+            <button @click="closeModal" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <form @submit.prevent="handleSubmit" class="supplier-form">
+            <div class="form-group">
+              <label>Название компании:</label>
+              <input 
+                v-model="supplierForm.name"
+                required
+                placeholder="Введите название компании"
+              >
+            </div>
+            <div class="form-group">
+              <label>Контактное лицо:</label>
+              <input 
+                v-model="supplierForm.contactPerson"
+                required
+                placeholder="Введите ФИО контактного лица"
+              >
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email:</label>
+                <input 
+                  v-model="supplierForm.email"
+                  type="email"
+                  required
+                  placeholder="Введите email"
+                >
+              </div>
+              <div class="form-group">
+                <label>Телефон:</label>
+                <input 
+                  v-model="supplierForm.phone"
+                  type="tel"
+                  required
+                  placeholder="Введите телефон"
+                >
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Адрес:</label>
+              <textarea 
+                v-model="supplierForm.address"
+                required
+                placeholder="Введите адрес"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="modal-actions">
+              <button type="button" @click="closeModal" class="cancel-btn">
+                <span>Отмена</span>
               </button>
-              <button @click="deleteSupplier(supplier)" class="icon-btn delete-btn" title="Удалить">
+              <button type="submit" class="save-btn">
+                <span class="material-icons">save</span>
+                <span>Сохранить</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div v-if="showDeleteModal" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Подтверждение удаления</h2>
+            <button @click="closeDeleteModal" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="delete-confirmation">
+            <p>Вы действительно хотите удалить поставщика "{{ selectedSupplier?.name }}"?</p>
+            <div class="modal-actions">
+              <button @click="closeDeleteModal" class="cancel-btn">
+                <span>Отмена</span>
+              </button>
+              <button @click="confirmDelete" class="delete-btn">
                 <span class="material-icons">delete</span>
+                <span>Удалить</span>
               </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>{{ isEditing ? 'Редактировать поставщика' : 'Добавить поставщика' }}</h2>
-          <button @click="closeModal" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <form @submit.prevent="handleSubmit" class="supplier-form">
-          <div class="form-group">
-            <label>Название компании:</label>
-            <input 
-              v-model="supplierForm.name"
-              required
-              placeholder="Введите название компании"
-            >
-          </div>
-          <div class="form-group">
-            <label>Контактное лицо:</label>
-            <input 
-              v-model="supplierForm.contactPerson"
-              required
-              placeholder="Введите ФИО контактного лица"
-            >
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Email:</label>
-              <input 
-                v-model="supplierForm.email"
-                type="email"
-                required
-                placeholder="Введите email"
-              >
             </div>
-            <div class="form-group">
-              <label>Телефон:</label>
-              <input 
-                v-model="supplierForm.phone"
-                type="tel"
-                required
-                placeholder="Введите телефон"
-              >
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Адрес:</label>
-            <textarea 
-              v-model="supplierForm.address"
-              required
-              placeholder="Введите адрес"
-              rows="3"
-            ></textarea>
-          </div>
-          <div class="modal-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">
-              <span>Отмена</span>
-            </button>
-            <button type="submit" class="save-btn">
-              <span class="material-icons">save</span>
-              <span>Сохранить</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Подтверждение удаления</h2>
-          <button @click="closeDeleteModal" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <div class="delete-confirmation">
-          <p>Вы действительно хотите удалить поставщика "{{ selectedSupplier?.name }}"?</p>
-          <div class="modal-actions">
-            <button @click="closeDeleteModal" class="cancel-btn">
-              <span>Отмена</span>
-            </button>
-            <button @click="confirmDelete" class="delete-btn">
-              <span class="material-icons">delete</span>
-              <span>Удалить</span>
-            </button>
           </div>
         </div>
       </div>
@@ -275,12 +277,14 @@ onMounted(() => {
 }
 
 .page-header {
+.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.header-content {
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -291,10 +295,17 @@ onMounted(() => {
 }
 
 .page-header h1 {
+.page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
+}
+
+.suppliers-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .add-btn {
@@ -568,6 +579,7 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  .header-content,
   .header-content,
   .filters,
   .table-container {

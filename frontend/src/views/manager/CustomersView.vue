@@ -6,124 +6,126 @@
       </div>
     </div>
 
-    <!-- Search -->
-    <div class="filters">
-      <div class="search-container">
-        <span class="material-icons search-icon">search</span>
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Поиск по имени, email или телефону..."
-          class="search-input"
-        >
-      </div>
-    </div>
-
-    <!-- Customers Table -->
-    <div class="table-container">
-      <table class="customers-table">
-        <thead>
-          <tr>
-            <th>Имя</th>
-            <th>Email</th>
-            <th>Телефон</th>
-            <th>Адрес</th>
-            <th>Статус</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="customer in filteredCustomers" :key="customer.id">
-            <td>{{ `${customer.firstName} ${customer.lastName}` }}</td>
-            <td>{{ customer.email }}</td>
-            <td>{{ customer.phone || 'Не указан' }}</td>
-            <td>{{ customer.address || 'Не указан' }}</td>
-            <td>
-              <span class="status-badge" :class="{ active: customer.isActive }">
-                {{ customer.isActive ? 'Активен' : 'Неактивен' }}
-              </span>
-            </td>
-            <td class="actions">
-              <button @click="editCustomer(customer)" class="icon-btn edit-btn" title="Изменить">
-                <span class="material-icons">edit</span>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Edit Modal -->
-    <div v-if="showEditModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Редактировать покупателя</h2>
-          <button @click="closeModal" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
+    <div class="customers-content">
+      <!-- Search -->
+      <div class="filters">
+        <div class="search-container">
+          <span class="material-icons search-icon">search</span>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Поиск по имени или email..."
+            class="search-input"
+          >
         </div>
-        <form @submit.prevent="handleSubmit" class="customer-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Имя:</label>
-              <input v-model="customerForm.firstName" required placeholder="Введите имя">
-            </div>
-            <div class="form-group">
-              <label>Фамилия:</label>
-              <input v-model="customerForm.lastName" required placeholder="Введите фамилию">
-            </div>
+      </div>
+
+      <!-- Customers Table -->
+      <div class="table-container">
+        <table class="customers-table">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Email</th>
+              <th>Телефон</th>
+              <th>Адрес</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="customer in filteredCustomers" :key="customer.id">
+              <td>{{ `${customer.firstName} ${customer.lastName}` }}</td>
+              <td>{{ customer.email }}</td>
+              <td>{{ customer.phone || 'Не указан' }}</td>
+              <td>{{ customer.address || 'Не указан' }}</td>
+              <td>
+                <span class="status-badge" :class="{ active: customer.isActive }">
+                  {{ customer.isActive ? 'Активен' : 'Неактивен' }}
+                </span>
+              </td>
+              <td class="actions">
+                <button @click="editCustomer(customer)" class="icon-btn edit-btn" title="Изменить">
+                  <span class="material-icons">edit</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Edit Modal -->
+      <div v-if="showEditModal" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Редактировать покупателя</h2>
+            <button @click="closeModal" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Email:</label>
-              <input 
-                v-model="customerForm.email" 
-                type="email" 
-                disabled
-                placeholder="Email"
-              >
+          <form @submit.prevent="handleSubmit" class="customer-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Имя:</label>
+                <input v-model="customerForm.firstName" required placeholder="Введите имя">
+              </div>
+              <div class="form-group">
+                <label>Фамилия:</label>
+                <input v-model="customerForm.lastName" required placeholder="Введите фамилию">
+              </div>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Телефон:</label>
-              <input 
-                v-model="customerForm.phone" 
-                type="tel"
-                placeholder="Введите телефон"
-              >
-            </div>
-            <div class="form-group">
-              <label>Адрес:</label>
-              <input 
-                v-model="customerForm.address"
-                placeholder="Введите адрес"
-              >
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Статус:</label>
-            <div class="toggle-container">
-              <label class="toggle">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email:</label>
                 <input 
-                  type="checkbox" 
-                  v-model="customerForm.isActive"
+                  v-model="customerForm.email" 
+                  type="email" 
+                  disabled
+                  placeholder="Email"
                 >
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-label">{{ customerForm.isActive ? 'Активен' : 'Неактивен' }}</span>
+              </div>
             </div>
-          </div>
-          <div class="modal-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">
-              <span>Отмена</span>
-            </button>
-            <button type="submit" class="save-btn">
-              <span class="material-icons">save</span>
-              <span>Сохранить</span>
-            </button>
-          </div>
-        </form>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Телефон:</label>
+                <input 
+                  v-model="customerForm.phone" 
+                  type="tel"
+                  placeholder="Введите телефон"
+                >
+              </div>
+              <div class="form-group">
+                <label>Адрес:</label>
+                <input 
+                  v-model="customerForm.address"
+                  placeholder="Введите адрес"
+                >
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Статус:</label>
+              <div class="toggle-container">
+                <label class="toggle">
+                  <input 
+                    type="checkbox" 
+                    v-model="customerForm.isActive"
+                  >
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label">{{ customerForm.isActive ? 'Активен' : 'Неактивен' }}</span>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" @click="closeModal" class="cancel-btn">
+                <span>Отмена</span>
+              </button>
+              <button type="submit" class="save-btn">
+                <span class="material-icons">save</span>
+                <span>Сохранить</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -226,12 +228,14 @@ onMounted(() => {
 }
 
 .page-header {
+.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.header-content {
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -242,10 +246,17 @@ onMounted(() => {
 }
 
 .page-header h1 {
+.page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
+}
+
+.customers-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .filters {
