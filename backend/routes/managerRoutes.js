@@ -4,6 +4,7 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 const { getAllEmployees, addEmployee, updateEmployee } = require('../controllers/employeeController');
 const { getAllCustomers, updateCustomer } = require('../controllers/customerController');
 const { getAllOrders, updateOrderStatus } = require('../controllers/orderController');
+const { getAllSuppliers, createSupplier, updateSupplier, deleteSupplier } = require('../controllers/supplierController');
 const { getGeneralStats, getSalesTimeline, getTopProducts } = require('../controllers/dashboardController');
 
 // Все маршруты требуют аутентификации и роль менеджера
@@ -22,6 +23,12 @@ router.put('/customers/:id', updateCustomer);
 // Маршруты для работы с заказами
 router.get('/orders', getAllOrders);
 router.put('/orders/:id/status', updateOrderStatus);
+
+// Маршруты для работы с поставщиками
+router.get('/suppliers', getAllSuppliers);
+router.post('/suppliers', createSupplier);
+router.put('/suppliers/:id', updateSupplier);
+router.delete('/suppliers/:id', deleteSupplier);
 
 // Маршруты для дашборда
 router.get('/dashboard/stats', getGeneralStats);

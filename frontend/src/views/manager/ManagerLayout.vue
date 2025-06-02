@@ -46,6 +46,14 @@
           <span class="material-icons">shopping_cart</span>
           <span>Заказы</span>
         </router-link>
+        <router-link 
+          to="/manager/suppliers" 
+          class="nav-link"
+          active-class="active"
+        >
+          <span class="material-icons">local_shipping</span>
+          <span>Поставщики</span>
+        </router-link>
       </nav>
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn">
