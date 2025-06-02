@@ -35,3 +35,32 @@ Vue + Node.js + PostgreSQL
 •	Запись с максимальной разницей между розничной и оптовой ценой.
 Должна быть предусмотрена возможность добавления и удале- ния песен в заданную группу.
 
+
+
+Authentication Endpoints (/api/auth):
+POST /api/auth/register - Регистрация нового пользователя
+POST /api/auth/login - Вход в систему
+GET /api/auth/profile - Получение профиля пользователя (требует авторизации)
+Catalog Endpoints (/api/catalog):
+GET /api/catalog/albums - Получение списка альбомов
+GET /api/catalog/albums/:id - Получение деталей конкретного альбома
+GET /api/catalog/formats - Получение списка форматов
+Order Endpoints (/api/orders):
+Все требуют авторизации:
+POST /api/orders - Создание нового заказа
+GET /api/orders - Получение списка заказов пользователя
+GET /api/orders/:id - Получение деталей конкретного заказа
+Manager Endpoints (/api/manager):
+Все требуют авторизации и роль менеджера:
+Сотрудники:
+GET /api/manager/employees - Получение списка сотрудников
+POST /api/manager/employees - Добавление нового сотрудника
+PUT /api/manager/employees/:id - Обновление информации о сотруднике
+Поставки:
+POST /api/manager/purchases - Создание новой поставки
+GET /api/manager/purchases - Получение списка поставок
+PUT /api/manager/purchases/:id/status - Обновление статуса поставки
+Дашборд:
+GET /api/manager/dashboard/stats - Общая статистика
+GET /api/manager/dashboard/sales - Временная линия продаж
+GET /api/manager/dashboard/top-products - Топ продуктов
