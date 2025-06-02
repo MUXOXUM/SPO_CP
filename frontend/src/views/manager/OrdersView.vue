@@ -1,162 +1,166 @@
 <template>
   <div class="orders">
-    <div class="header">
-      <h1>Управление заказами</h1>
-    </div>
-
-    <!-- Search -->
-    <div class="filters">
-      <div class="search-container">
-        <span class="material-icons search-icon">search</span>
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Поиск по номеру заказа или имени покупателя..."
-          class="search-input"
-        >
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Заказы</h1>
       </div>
     </div>
 
-    <!-- Orders Table -->
-    <div class="table-container">
-      <table class="orders-table">
-        <thead>
-          <tr>
-            <th>№ Заказа</th>
-            <th>Покупатель</th>
-            <th>Дата заказа</th>
-            <th>Сумма</th>
-            <th>Статус</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="order in filteredOrders" :key="order.id">
-            <td>#{{ order.id }}</td>
-            <td>{{ `${order.customer.firstName} ${order.customer.lastName}` }}</td>
-            <td>{{ formatDate(order.orderDate) }}</td>
-            <td>{{ formatPrice(order.totalAmount) }} ₽</td>
-            <td>
-              <span class="status-badge" :class="getStatusClass(order.status)">
-                {{ getStatusText(order.status) }}
-              </span>
-            </td>
-            <td class="actions">
-              <button @click="viewOrderDetails(order)" class="icon-btn view-btn" title="Просмотр">
-                <span class="material-icons">visibility</span>
-              </button>
-              <button @click="editOrder(order)" class="icon-btn edit-btn" title="Изменить">
-                <span class="material-icons">edit</span>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Order Details Modal -->
-    <div v-if="showDetailsModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Детали заказа #{{ selectedOrder?.id }}</h2>
-          <button @click="closeModal" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
+    <div class="orders-content">
+      <!-- Search and Filters -->
+      <div class="filters">
+        <div class="search-container">
+          <span class="material-icons search-icon">search</span>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Поиск по номеру заказа..."
+            class="search-input"
+          >
         </div>
-        <div class="order-details">
-          <div class="details-section">
-            <h3>Информация о заказе</h3>
-            <div class="details-grid">
-              <div class="detail-item">
-                <span class="label">Дата заказа:</span>
-                <span>{{ formatDate(selectedOrder?.orderDate) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Статус:</span>
-                <span :class="getStatusClass(selectedOrder?.status)">
-                  {{ getStatusText(selectedOrder?.status) }}
+      </div>
+
+      <!-- Orders Table -->
+      <div class="table-container">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>№ Заказа</th>
+              <th>Покупатель</th>
+              <th>Дата заказа</th>
+              <th>Сумма</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="order in filteredOrders" :key="order.id">
+              <td>#{{ order.id }}</td>
+              <td>{{ `${order.customer.firstName} ${order.customer.lastName}` }}</td>
+              <td>{{ formatDate(order.orderDate) }}</td>
+              <td>{{ formatPrice(order.totalAmount) }} ₽</td>
+              <td>
+                <span class="status-badge" :class="getStatusClass(order.status)">
+                  {{ getStatusText(order.status) }}
                 </span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Сумма заказа:</span>
-                <span>{{ formatPrice(selectedOrder?.totalAmount) }} ₽</span>
+              </td>
+              <td class="actions">
+                <button @click="viewOrderDetails(order)" class="icon-btn view-btn" title="Просмотр">
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button @click="editOrder(order)" class="icon-btn edit-btn" title="Изменить">
+                  <span class="material-icons">edit</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Order Details Modal -->
+      <div v-if="showDetailsModal" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Детали заказа #{{ selectedOrder?.id }}</h2>
+            <button @click="closeModal" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="order-details">
+            <div class="details-section">
+              <h3>Информация о заказе</h3>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="label">Дата заказа:</span>
+                  <span>{{ formatDate(selectedOrder?.orderDate) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Статус:</span>
+                  <span :class="getStatusClass(selectedOrder?.status)">
+                    {{ getStatusText(selectedOrder?.status) }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Сумма заказа:</span>
+                  <span>{{ formatPrice(selectedOrder?.totalAmount) }} ₽</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="details-section">
-            <h3>Информация о покупателе</h3>
-            <div class="details-grid">
-              <div class="detail-item">
-                <span class="label">ФИО:</span>
-                <span>{{ `${selectedOrder?.customer.firstName} ${selectedOrder?.customer.lastName}` }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Email:</span>
-                <span>{{ selectedOrder?.customer.email }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Телефон:</span>
-                <span>{{ selectedOrder?.customer.phone || 'Не указан' }}</span>
+            <div class="details-section">
+              <h3>Информация о покупателе</h3>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="label">ФИО:</span>
+                  <span>{{ `${selectedOrder?.customer.firstName} ${selectedOrder?.customer.lastName}` }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Email:</span>
+                  <span>{{ selectedOrder?.customer.email }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Телефон:</span>
+                  <span>{{ selectedOrder?.customer.phone || 'Не указан' }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="details-section">
-            <h3>Товары</h3>
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th>Наименование</th>
-                  <th>Количество</th>
-                  <th>Цена</th>
-                  <th>Сумма</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in selectedOrder?.items" :key="item.id">
-                  <td>{{ item.product.name }}</td>
-                  <td>{{ item.quantity }}</td>
-                  <td>{{ formatPrice(item.price) }} ₽</td>
-                  <td>{{ formatPrice(item.price * item.quantity) }} ₽</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="details-section">
+              <h3>Товары</h3>
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Наименование</th>
+                    <th>Количество</th>
+                    <th>Цена</th>
+                    <th>Сумма</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in selectedOrder?.items" :key="item.id">
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ formatPrice(item.price) }} ₽</td>
+                    <td>{{ formatPrice(item.price * item.quantity) }} ₽</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Edit Modal -->
-    <div v-if="showEditModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Изменить статус заказа #{{ selectedOrder?.id }}</h2>
-          <button @click="closeModal" class="close-btn">
-            <span class="material-icons">close</span>
-          </button>
+      <!-- Edit Modal -->
+      <div v-if="showEditModal" class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Изменить статус заказа #{{ selectedOrder?.id }}</h2>
+            <button @click="closeModal" class="close-btn">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <form @submit.prevent="handleSubmit" class="order-form">
+            <div class="form-group">
+              <label>Статус заказа:</label>
+              <select v-model="orderForm.status">
+                <option value="new">Новый</option>
+                <option value="processing">В обработке</option>
+                <option value="shipped">Отправлен</option>
+                <option value="delivered">Доставлен</option>
+                <option value="cancelled">Отменён</option>
+              </select>
+            </div>
+            <div class="modal-actions">
+              <button type="button" @click="closeModal" class="cancel-btn">
+                <span>Отмена</span>
+              </button>
+              <button type="submit" class="save-btn">
+                <span class="material-icons">save</span>
+                <span>Сохранить</span>
+              </button>
+            </div>
+          </form>
         </div>
-        <form @submit.prevent="handleSubmit" class="order-form">
-          <div class="form-group">
-            <label>Статус заказа:</label>
-            <select v-model="orderForm.status">
-              <option value="new">Новый</option>
-              <option value="processing">В обработке</option>
-              <option value="shipped">Отправлен</option>
-              <option value="delivered">Доставлен</option>
-              <option value="cancelled">Отменён</option>
-            </select>
-          </div>
-          <div class="modal-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">
-              <span>Отмена</span>
-            </button>
-            <button type="submit" class="save-btn">
-              <span class="material-icons">save</span>
-              <span>Сохранить</span>
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
@@ -278,14 +282,14 @@ onMounted(() => {
   font-family: 'Montserrat', sans-serif;
 }
 
-.header {
+.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header {
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -294,11 +298,17 @@ onMounted(() => {
   padding: 0 2rem;
 }
 
-.header h1 {
+.page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
+}
+
+.orders-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .filters {
@@ -614,7 +624,7 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .header,
+  .header-content,
   .filters,
   .table-container {
     padding: 0 1rem;
