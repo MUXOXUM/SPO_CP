@@ -277,14 +277,12 @@ onMounted(() => {
 }
 
 .page-header {
-.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header-content {
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -294,7 +292,6 @@ onMounted(() => {
   padding: 0 2rem;
 }
 
-.page-header h1 {
 .page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
@@ -579,7 +576,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .header-content,
   .header-content,
   .filters,
   .table-container {
