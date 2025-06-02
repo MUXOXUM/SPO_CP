@@ -151,6 +151,60 @@ INSERT INTO "Products" (product_id, format, price, stock_quantity, barcode, cond
 (10, 'Цифровой', 199.99, 300, '0123456789012', 'Новый', 10);
 ```
 
+## Пользователи (`Users`)
+
+```sql
+INSERT INTO users (
+    user_id, email, password, role, first_name, last_name, phone, address, position, hire_date, salary, is_active, createdAt, updatedAt
+) VALUES
+(1, 'alex@gmail.com', '$2b$10$dFePKDTAaolkTHpEnKHL..eNGrN7BCCIFw3JsAiSngzS1wvgGNl7.', 'customer', 'Алексей', 'Черников', '78902341576', NULL, NULL, NULL, NULL, true, '2025-06-02 21:02:54.187+03', '2025-06-02 21:02:54.187+03'),
+(2, 'bob@gmail.com', '$2b$10$ztoSxzSSHgge2t2PSnc2F.QFXSp/ELcL2eSeetVEeGyZcPCc84gyO', 'manager', 'Боб', 'Фомин', '78453217456', NULL, NULL, NULL, NULL, true, '2025-06-02 21:04:36.344+03', '2025-06-02 21:04:36.344+03'),
+(3, 'liza@gmail.com', '$2b$10$vqMaHKipzRHR1qeiQdPb/u497faa1xOF1NZMOuUoT0BbzJk6TjG.S', 'customer', 'Елизавета', 'Нагиева', '78903216565', NULL, NULL, NULL, NULL, true, '2025-06-02 21:22:39.132+03', '2025-06-02 21:22:39.132+03'),
+(4, 'pavel@gmail.com', '$2b$10$sYxLGwLwItnSr2eRiWRW..NLEymnz9t8kpWLdnqjWWTqiERiaQGxC', 'customer', 'Павел', 'Викторович', '78934514328', NULL, NULL, NULL, NULL, true, '2025-06-02 21:23:12.635+03', '2025-06-02 21:23:12.635+03'),
+(5, 'grig@gmail.com', '$2b$10$qDXHvdkkYFEk7S12QQ4NpOoKQhKIp9kZL2QVtuekb5dc7H3ye2U5O', 'customer', 'Григ', 'Скандинавский', '74385767612', NULL, NULL, NULL, NULL, true, '2025-06-02 21:51:09.104+03', '2025-06-02 21:51:09.104+03');
+```
+
+## Заказы (`Orders`)
+
+```sql
+INSERT INTO "Orders" (order_id, user_id, order_date, total_amount, status, payment_method, shipping_address) VALUES
+(1, 1, '2025-06-01 10:30:00+03', 2499.99, 'processing', 'Кредитная карта', 'Москва, ул. Пушкина, д. 10'),
+(2, 2, '2025-05-12 12:00:00+03', 799.50, 'completed', 'Наличные', 'Санкт-Петербург, Невский проспект, д. 5'),
+(3, 3, '2025-05-04 14:15:00+03', 1299.00, 'completed', 'PayPal', 'Казань, ул. Баумана, д. 20'),
+(4, 3, '2025-05-01 15:45:00+03', 199.99, 'completed', 'Карта', 'Новосибирск, Красный проспект, д. 50'),
+(5, 3, '2024-06-01 17:00:00+03', 1599.00, 'completed', 'Apple Pay', 'Екатеринбург, ул. Ленина, д. 100');
+```
+
+## Элементы заказов (`OrderItems`)
+
+```sql
+INSERT INTO "OrderItems" (order_item_id, order_id, product_id, quantity, price) VALUES
+-- Заказ 1
+(1, 1, 1, 2, 499.99),
+(2, 1, 2, 1, 1299.50),
+(3, 1, 3, 1, 199.00),
+
+-- Заказ 2
+(4, 2, 4, 1, 199.99),
+(5, 2, 5, 2, 199.99),
+(6, 2, 6, 1, 399.52),
+
+-- Заказ 3
+(7, 3, 7, 1, 299.00),
+(8, 3, 8, 2, 499.50),
+(9, 3, 9, 1, 500.50),
+
+-- Заказ 4
+(10, 4, 3, 1, 199.99),
+(11, 4, 2, 1, 199.99),
+(12, 4, 1, 1, 199.99),
+
+-- Заказ 5
+(13, 5, 9, 2, 799.50),
+(14, 5, 8, 1, 399.00),
+(15, 5, 10, 1, 400.50);
+```
+
 
 
 

@@ -30,6 +30,22 @@
           <span class="material-icons">people</span>
           <span>Сотрудники</span>
         </router-link>
+        <router-link 
+          to="/manager/customers" 
+          class="nav-link"
+          active-class="active"
+        >
+          <span class="material-icons">person</span>
+          <span>Покупатели</span>
+        </router-link>
+        <router-link 
+          to="/manager/orders" 
+          class="nav-link"
+          active-class="active"
+        >
+          <span class="material-icons">shopping_cart</span>
+          <span>Заказы</span>
+        </router-link>
       </nav>
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn">

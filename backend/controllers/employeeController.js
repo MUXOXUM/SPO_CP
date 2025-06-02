@@ -5,8 +5,7 @@ const getAllEmployees = async (req, res) => {
     try {
         const employees = await User.findAll({
             where: {
-                role: ['manager', 'admin'],
-                is_active: true
+                role: ['manager', 'admin']
             },
             attributes: [
                 'user_id',
@@ -17,7 +16,8 @@ const getAllEmployees = async (req, res) => {
                 'position',
                 'hire_date',
                 'salary',
-                'role'
+                'role',
+                'is_active'
             ]
         });
 
@@ -30,7 +30,8 @@ const getAllEmployees = async (req, res) => {
             position: emp.position,
             hireDate: emp.hire_date,
             salary: parseFloat(emp.salary),
-            role: emp.role
+            role: emp.role,
+            isActive: emp.is_active
         }));
 
         res.json(formattedEmployees);

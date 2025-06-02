@@ -25,13 +25,13 @@ Product.belongsTo(Album, { foreignKey: 'album_id' });
 Album.hasMany(Product, { foreignKey: 'album_id' });
 
 // Связи для Order
-Order.belongsTo(User, { foreignKey: 'user_id' });
-User.hasMany(Order, { foreignKey: 'user_id' });
+Order.belongsTo(User, { foreignKey: 'user_id', as: 'customer' });
+User.hasMany(Order, { foreignKey: 'user_id', as: 'orders' });
 
 // Связи для OrderItem
 OrderItem.belongsTo(Order, { foreignKey: 'order_id' });
-Order.hasMany(OrderItem, { foreignKey: 'order_id' });
-OrderItem.belongsTo(Product, { foreignKey: 'product_id' });
+Order.hasMany(OrderItem, { foreignKey: 'order_id', as: 'items' });
+OrderItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 Product.hasMany(OrderItem, { foreignKey: 'product_id' });
 
 // Связи для Review

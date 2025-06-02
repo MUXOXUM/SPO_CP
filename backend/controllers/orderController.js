@@ -1,4 +1,4 @@
-const { Order, OrderItem, Product, Album, User } = require('../models');
+const { Order, OrderItem, Product, Album, User, Artist } = require('../models');
 
 // Создание нового заказа
 const createOrder = async (req, res) => {
@@ -152,8 +152,89 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
+// Получение списка всех заказов
+const getAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.findAll({
+            include: [
+                {
+                    model: User,
+                    as: 'customer',
+                    attributes: ['first_name', 'last_name', 'email', 'phone']
+                },
+                {
+                    model: OrderItem,
+                    as: 'items',
+                    include: [{
+                        model: Product,
+                        as: 'product',
+                        include: [{
+                            model: Album,
+                            include: [{
+                                model: Artist,
+                                attributes: ['name']
+                            }],
+                            attributes: ['title']
+                        }]
+                    }]
+                }
+            ],
+            order: [['order_date', 'DESC']]
+        });
+
+        const formattedOrders = orders.map(order => ({
+            id: order.order_id,
+            orderDate: order.order_date,
+            totalAmount: order.total_amount,
+            status: order.status,
+            customer: {
+                firstName: order.customer.first_name,
+                lastName: order.customer.last_name,
+                email: order.customer.email,
+                phone: order.customer.phone
+            },
+            items: order.items.map(item => ({
+                id: item.order_item_id,
+                quantity: item.quantity,
+                price: item.price,
+                product: {
+                    name: `${item.product.Album.Artist.name} - ${item.product.Album.title} (${item.product.format})`
+                }
+            }))
+        }));
+
+        res.json(formattedOrders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Ошибка при получении списка заказов' });
+    }
+};
+
+// Обновление статуса заказа
+const updateOrderStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findByPk(id);
+
+        if (!order) {
+            return res.status(404).json({ error: 'Заказ не найден' });
+        }
+
+        await order.update({ status });
+
+        res.json({ message: 'Статус заказа успешно обновлен' });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ error: 'Ошибка при обновлении статуса заказа' });
+    }
+};
+
 module.exports = {
     createOrder,
     getUserOrders,
-    getOrderDetails
+    getOrderDetails,
+    getAllOrders,
+    updateOrderStatus
 }; 

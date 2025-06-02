@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken, isManager } = require('../middleware/auth');
 const { getAllEmployees, addEmployee, updateEmployee } = require('../controllers/employeeController');
-const { createPurchase, getAllPurchases, updatePurchaseStatus } = require('../controllers/purchaseController');
+const { getAllCustomers, updateCustomer } = require('../controllers/customerController');
+const { getAllOrders, updateOrderStatus } = require('../controllers/orderController');
 const { getGeneralStats, getSalesTimeline, getTopProducts } = require('../controllers/dashboardController');
 
 // Все маршруты требуют аутентификации и роль менеджера
@@ -14,10 +15,13 @@ router.get('/employees', getAllEmployees);
 router.post('/employees', addEmployee);
 router.put('/employees/:id', updateEmployee);
 
-// Маршруты для работы с поставками
-router.post('/purchases', createPurchase);
-router.get('/purchases', getAllPurchases);
-router.put('/purchases/:id/status', updatePurchaseStatus);
+// Маршруты для работы с покупателями
+router.get('/customers', getAllCustomers);
+router.put('/customers/:id', updateCustomer);
+
+// Маршруты для работы с заказами
+router.get('/orders', getAllOrders);
+router.put('/orders/:id/status', updateOrderStatus);
 
 // Маршруты для дашборда
 router.get('/dashboard/stats', getGeneralStats);
