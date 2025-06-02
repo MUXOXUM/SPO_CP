@@ -98,13 +98,9 @@ const getFormatName = (formatId) => {
 
 const getFormatIcon = (formatId) => {
   const format = formats.value.find(f => f.id === formatId);
-  if (!format) {
-    console.log('Format not found for id:', formatId);
-    return '';
-  }
+  if (!format) return '';
   
   const formatName = format.name.toLowerCase();
-  console.log('Format name:', formatName);
   
   switch (formatName) {
     case 'винил':
@@ -118,7 +114,6 @@ const getFormatIcon = (formatId) => {
     case 'цифровая запись':
       return '/digit.png';
     default:
-      console.log('No matching case for format:', formatName);
       return '';
   }
 };
@@ -135,7 +130,6 @@ const fetchAlbums = async () => {
 const fetchFormats = async () => {
   try {
     const response = await axios.get('/api/catalog/formats');
-    console.log('Received formats:', response.data);
     formats.value = response.data;
   } catch (error) {
     console.error('Error fetching formats:', error);
