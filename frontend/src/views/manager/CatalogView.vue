@@ -118,7 +118,7 @@
               <label>Формат:</label>
               <div class="select-container">
                 <select v-model="albumForm.formatId" required>
-                  <option value="" disabled selected>Выберите формат</option>
+                  <option value="" disabled selected>Формат</option>
                   <option v-for="format in formats" :key="format.id" :value="format.id">
                     {{ format.name }}
                   </option>
@@ -133,16 +133,6 @@
             <div class="form-group">
               <label>Количество:</label>
               <input v-model="albumForm.inStock" type="number" required placeholder="0">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Обложка:</label>
-            <div class="file-input">
-              <input type="file" @change="handleImageUpload" accept="image/*" id="coverImage">
-              <label for="coverImage" class="file-label">
-                <span class="material-icons">upload</span>
-                <span>Выберите файл</span>
-              </label>
             </div>
           </div>
           <div class="modal-actions">
@@ -207,8 +197,7 @@ const albumForm = ref({
   artist: '',
   formatId: '',
   price: '',
-  inStock: '',
-  coverImage: null
+  inStock: ''
 });
 
 // Computed
@@ -279,17 +268,15 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ru-RU').format(price);
 };
 
-const handleImageUpload = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    // TODO: Implement image upload
-    albumForm.value.coverImage = file;
-  }
-};
-
 const editAlbum = (album) => {
   editingAlbum.value = album;
-  albumForm.value = { ...album };
+  albumForm.value = {
+    title: album.title,
+    artist: album.artist,
+    formatId: album.formatId,
+    price: album.price,
+    inStock: album.inStock
+  };
   showAddModal.value = true;
 };
 
@@ -331,8 +318,7 @@ const closeModal = () => {
     artist: '',
     formatId: '',
     price: '',
-    inStock: '',
-    coverImage: null
+    inStock: ''
   };
 };
 
@@ -576,6 +562,7 @@ onMounted(() => {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  margin: 2rem;
 }
 
 .modal-header {
@@ -584,6 +571,10 @@ onMounted(() => {
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid #f0f0f0;
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .modal-header h2 {
@@ -616,7 +607,7 @@ onMounted(() => {
 
 .form-row {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -625,6 +616,31 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
+  margin-right: 1rem;
+}
+
+.form-group:last-child {
+  margin-right: 0;
+}
+
+.form-group .select-container {
+  width: 100%;
+  margin: 0;
+}
+
+.form-group .select-container select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 0.875rem 2.5rem 0.875rem 1rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+  background-color: white;
 }
 
 .form-group label {
@@ -635,6 +651,7 @@ onMounted(() => {
 
 .form-group input,
 .form-group select {
+  width: 100%;
   padding: 0.875rem;
   border: 1.5px solid #e0e0e0;
   border-radius: 8px;
@@ -650,61 +667,16 @@ onMounted(() => {
   box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
 }
 
-.file-input {
-  position: relative;
-}
-
-.file-input input[type="file"] {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-}
-
-.file-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem;
-  background-color: #f8f9fa;
-  border: 1.5px dashed #e0e0e0;
-  border-radius: 8px;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.file-label:hover {
-  border-color: #2e7d32;
-  color: #2e7d32;
-}
-
-.modal-content {
-  padding: 1.5rem;
-}
-
-.warning-message {
-  text-align: center;
-  color: #333;
-}
-
-.warning-icon {
-  font-size: 48px;
-  color: #d32f2f;
-  margin-bottom: 1rem;
-}
-
-.warning-subtext {
-  color: #666;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #f0f0f0;
+  position: sticky;
+  bottom: 0;
 }
 
 .cancel-btn,
@@ -776,10 +748,16 @@ onMounted(() => {
 
   .form-row {
     flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-group {
+    width: 100%;
   }
 
   .modal {
     margin: 1rem;
+    max-height: calc(100vh - 2rem);
   }
 }
 </style> 
