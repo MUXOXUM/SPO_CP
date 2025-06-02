@@ -7,15 +7,35 @@ const OrderItem = sequelize.define('OrderItem', {
         primaryKey: true,
         autoIncrement: true
     },
+    order_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Orders',
+            key: 'order_id'
+        }
+    },
+    product_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Products',
+            key: 'product_id'
+        }
+    },
     quantity: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        validate: {
+            min: 1
+        }
     },
-    unit_price: {
+    price: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     }
 }, {
+    tableName: 'OrderItems',
     timestamps: false
 });
 

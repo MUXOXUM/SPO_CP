@@ -50,7 +50,7 @@
           <label for="register-first-name">Имя:</label>
           <input
             id="register-first-name"
-            v-model="registerForm.first_name"
+            v-model="registerForm.firstName"
             type="text"
             required
             placeholder="Введите имя"
@@ -60,7 +60,7 @@
           <label for="register-last-name">Фамилия:</label>
           <input
             id="register-last-name"
-            v-model="registerForm.last_name"
+            v-model="registerForm.lastName"
             type="text"
             required
             placeholder="Введите фамилию"
@@ -74,6 +74,24 @@
             type="email"
             required
             placeholder="Введите email"
+          >
+        </div>
+        <div class="form-group">
+          <label for="register-phone">Телефон:</label>
+          <input
+            id="register-phone"
+            v-model="registerForm.phone"
+            type="tel"
+            placeholder="Введите номер телефона"
+          >
+        </div>
+        <div class="form-group">
+          <label for="register-address">Адрес:</label>
+          <input
+            id="register-address"
+            v-model="registerForm.address"
+            type="text"
+            placeholder="Введите адрес"
           >
         </div>
         <div class="form-group">
@@ -117,8 +135,10 @@ const loginForm = ref({
 const registerForm = ref({
   email: '',
   password: '',
-  first_name: '',
-  last_name: ''
+  firstName: '',
+  lastName: '',
+  phone: '',
+  address: ''
 });
 
 const handleLogin = async () => {
@@ -142,7 +162,14 @@ const handleRegister = async () => {
   
   if (result.success) {
     activeTab.value = 'login';
-    registerForm.value = { email: '', password: '', first_name: '', last_name: '' };
+    registerForm.value = { 
+      email: '', 
+      password: '', 
+      firstName: '', 
+      lastName: '', 
+      phone: '', 
+      address: '' 
+    };
   } else {
     error.value = result.error;
   }

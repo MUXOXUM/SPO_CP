@@ -7,6 +7,22 @@ const Review = sequelize.define('Review', {
         primaryKey: true,
         autoIncrement: true
     },
+    user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Users',
+            key: 'user_id'
+        }
+    },
+    product_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Products',
+            key: 'product_id'
+        }
+    },
     rating: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -16,13 +32,16 @@ const Review = sequelize.define('Review', {
         }
     },
     comment: {
-        type: DataTypes.TEXT
+        type: DataTypes.TEXT,
+        allowNull: true
     },
     review_date: {
         type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW
     }
 }, {
+    tableName: 'Reviews',
     timestamps: false
 });
 

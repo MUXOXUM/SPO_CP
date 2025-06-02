@@ -7,19 +7,34 @@ const Purchase = sequelize.define('Purchase', {
         primaryKey: true,
         autoIncrement: true
     },
+    supplier_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Suppliers',
+            key: 'supplier_id'
+        }
+    },
+    user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Users',
+            key: 'user_id'
+        }
+    },
     purchase_date: {
         type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW
     },
-    total_amount: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
-    },
     status: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM('pending', 'processing', 'completed', 'cancelled'),
+        allowNull: false,
         defaultValue: 'pending'
     }
 }, {
+    tableName: 'Purchases',
     timestamps: false
 });
 

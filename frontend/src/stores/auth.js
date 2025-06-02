@@ -35,11 +35,22 @@ export const useAuthStore = defineStore('auth', {
 
     async register(userData) {
       try {
-        const response = await axios.post('http://localhost:3000/api/auth/register', userData);
+        const response = await axios.post('http://localhost:3000/api/auth/register', {
+          email: userData.email,
+          password: userData.password,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone || null,
+          address: userData.address || null
+        });
+        
         return { success: true, message: 'Регистрация успешна' };
       } catch (error) {
         console.error('Registration error:', error);
-        return { success: false, error: error.response?.data?.message || 'Ошибка регистрации' };
+        return { 
+          success: false, 
+          error: error.response?.data?.error || 'Ошибка регистрации' 
+        };
       }
     },
 

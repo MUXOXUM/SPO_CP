@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const User = sequelize.define('User', {
     user_id: {
@@ -21,14 +21,45 @@ const User = sequelize.define('User', {
         allowNull: false
     },
     role: {
-        type: DataTypes.ENUM('customer', 'manager'),
+        type: DataTypes.ENUM('admin', 'manager', 'customer'),
+        allowNull: false,
         defaultValue: 'customer'
+    },
+    first_name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    last_name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    address: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    // Дополнительные поля для сотрудников
+    position: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    hire_date: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    salary: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true
     },
     is_active: {
         type: DataTypes.BOOLEAN,
         defaultValue: true
     }
 }, {
+    tableName: 'Users',
     timestamps: true,
     hooks: {
         beforeCreate: async (user) => {

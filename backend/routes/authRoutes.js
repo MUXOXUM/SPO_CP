@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, getProfile } = require('../controllers/authController');
-const { auth } = require('../middleware/auth');
+const authController = require('../controllers/authController');
+const { authenticateToken } = require('../middleware/auth');
 
 // Регистрация нового пользователя
-router.post('/register', register);
+router.post('/register', authController.register);
 
 // Вход в систему
-router.post('/login', login);
+router.post('/login', authController.login);
 
 // Получение профиля пользователя (требует аутентификации)
-router.get('/profile', auth, getProfile);
+router.get('/profile', authenticateToken, authController.getCurrentUser);
 
 module.exports = router; 

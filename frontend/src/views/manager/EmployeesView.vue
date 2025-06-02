@@ -35,7 +35,7 @@
         </thead>
         <tbody>
           <tr v-for="employee in filteredEmployees" :key="employee.id">
-            <td>{{ employee.name }}</td>
+            <td>{{ `${employee.firstName} ${employee.lastName}` }}</td>
             <td>{{ employee.email }}</td>
             <td>
               <span class="role-badge" :class="employee.role">
@@ -52,7 +52,7 @@
                 <span class="material-icons">edit</span>
               </button>
               <button 
-                v-if="employee.role !== 'manager'"
+                v-if="employee.role !== 'admin'"
                 @click="confirmDelete(employee)" 
                 class="icon-btn delete-btn"
                 title="Удалить"
@@ -78,8 +78,14 @@
           <div class="form-row">
             <div class="form-group">
               <label>Имя:</label>
-              <input v-model="employeeForm.name" required placeholder="Введите имя">
+              <input v-model="employeeForm.firstName" required placeholder="Введите имя">
             </div>
+            <div class="form-group">
+              <label>Фамилия:</label>
+              <input v-model="employeeForm.lastName" required placeholder="Введите фамилию">
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label>Email:</label>
               <input 
@@ -97,8 +103,8 @@
               <div class="select-container">
                 <select v-model="employeeForm.role" required>
                   <option value="" disabled selected>Выберите роль</option>
+                  <option value="admin">Администратор</option>
                   <option value="manager">Менеджер</option>
-                  <option value="employee">Сотрудник</option>
                 </select>
                 <span class="material-icons select-icon">expand_more</span>
               </div>
@@ -146,7 +152,7 @@
         <div class="modal-content">
           <div class="warning-message">
             <span class="material-icons warning-icon">warning</span>
-            <p>Вы уверены, что хотите удалить сотрудника "{{ employeeToDelete?.name }}"?</p>
+            <p>Вы уверены, что хотите удалить сотрудника "{{ employeeToDelete?.firstName }} {{ employeeToDelete?.lastName }}"?</p>
             <p class="warning-subtext">Это действие нельзя отменить.</p>
           </div>
           <div class="modal-actions">
@@ -177,9 +183,10 @@ const editingEmployee = ref(null);
 const employeeToDelete = ref(null);
 
 const employeeForm = ref({
-  name: '',
+  firstName: '',
+  lastName: '',
   email: '',
-  role: 'employee',
+  role: '',
   password: '',
   isActive: true
 });
@@ -188,36 +195,65 @@ const employeeForm = ref({
 const filteredEmployees = computed(() => {
   return employees.value.filter(employee => {
     const searchTerm = searchQuery.value.toLowerCase();
-    return employee.name.toLowerCase().includes(searchTerm) ||
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm) ||
            employee.email.toLowerCase().includes(searchTerm);
   });
 });
 
+const getRoleName = (role) => {
+  const roles = {
+    'admin': 'Администратор',
+    'manager': 'Менеджер'
+  };
+  return roles[role] || role;
+};
+
 // Methods
 const fetchEmployees = async () => {
   try {
-    const response = await axios.get('/api/manager/employees');
+    const response = await axios.get('http://localhost:3000/api/manager/employees');
     employees.value = response.data;
   } catch (error) {
     console.error('Error fetching employees:', error);
   }
 };
 
-const getRoleName = (role) => {
-  const roles = {
-    manager: 'Менеджер',
-    employee: 'Сотрудник'
-  };
-  return roles[role] || role;
-};
-
 const editEmployee = (employee) => {
   editingEmployee.value = employee;
   employeeForm.value = {
-    ...employee,
-    password: ''
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    email: employee.email,
+    role: employee.role,
+    isActive: employee.isActive
   };
   showAddModal.value = true;
+};
+
+const handleSubmit = async () => {
+  try {
+    if (editingEmployee.value) {
+      await axios.put(`http://localhost:3000/api/manager/employees/${editingEmployee.value.id}`, {
+        firstName: employeeForm.value.firstName,
+        lastName: employeeForm.value.lastName,
+        role: employeeForm.value.role,
+        isActive: employeeForm.value.isActive
+      });
+    } else {
+      await axios.post('http://localhost:3000/api/manager/employees', {
+        firstName: employeeForm.value.firstName,
+        lastName: employeeForm.value.lastName,
+        email: employeeForm.value.email,
+        password: employeeForm.value.password,
+        role: employeeForm.value.role
+      });
+    }
+    await fetchEmployees();
+    closeModal();
+  } catch (error) {
+    console.error('Error submitting employee:', error);
+  }
 };
 
 const confirmDelete = (employee) => {
@@ -227,7 +263,7 @@ const confirmDelete = (employee) => {
 
 const deleteEmployee = async () => {
   try {
-    await axios.delete(`/api/manager/employees/${employeeToDelete.value.id}`);
+    await axios.delete(`http://localhost:3000/api/manager/employees/${employeeToDelete.value.id}`);
     await fetchEmployees();
     showDeleteModal.value = false;
     employeeToDelete.value = null;
@@ -236,33 +272,19 @@ const deleteEmployee = async () => {
   }
 };
 
-const handleSubmit = async () => {
-  try {
-    if (editingEmployee.value) {
-      await axios.put(`/api/manager/employees/${editingEmployee.value.id}`, employeeForm.value);
-    } else {
-      await axios.post('/api/manager/employees', employeeForm.value);
-    }
-    await fetchEmployees();
-    closeModal();
-  } catch (error) {
-    console.error('Error saving employee:', error);
-  }
-};
-
 const closeModal = () => {
   showAddModal.value = false;
   editingEmployee.value = null;
   employeeForm.value = {
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    role: 'employee',
+    role: '',
     password: '',
     isActive: true
   };
 };
 
-// Lifecycle
 onMounted(() => {
   fetchEmployees();
 });
@@ -393,12 +415,12 @@ onMounted(() => {
   font-size: 0.875rem;
 }
 
-.role-badge.manager {
+.role-badge.admin {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
 
-.role-badge.employee {
+.role-badge.manager {
   background-color: #f5f5f5;
   color: #666;
 }
