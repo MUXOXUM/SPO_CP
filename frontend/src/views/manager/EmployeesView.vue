@@ -1,11 +1,13 @@
 <template>
   <div class="employees">
-    <div class="header">
-      <h1>Управление сотрудниками</h1>
-      <button @click="showAddModal = true" class="add-btn">
-        <span class="material-icons">add</span>
-        <span>Добавить сотрудника</span>
-      </button>
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Управление сотрудниками</h1>
+        <button @click="showAddModal = true" class="add-btn">
+          <span class="material-icons">add</span>
+          <span>Добавить сотрудника</span>
+        </button>
+      </div>
     </div>
 
     <!-- Search -->
@@ -299,14 +301,14 @@ onMounted(() => {
   font-family: 'Montserrat', sans-serif;
 }
 
-.header {
+.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header {
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -315,7 +317,7 @@ onMounted(() => {
   padding: 0 2rem;
 }
 
-.header h1 {
+.page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
   font-weight: 600;

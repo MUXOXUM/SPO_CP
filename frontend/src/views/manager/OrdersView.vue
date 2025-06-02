@@ -1,7 +1,9 @@
 <template>
   <div class="orders">
-    <div class="header">
-      <h1>Управление заказами</h1>
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Управление заказами</h1>
+      </div>
     </div>
 
     <!-- Search -->
@@ -278,14 +280,14 @@ onMounted(() => {
   font-family: 'Montserrat', sans-serif;
 }
 
-.header {
+.page-header {
   background-color: white;
   padding: 1.5rem 0;
   margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header {
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -294,7 +296,7 @@ onMounted(() => {
   padding: 0 2rem;
 }
 
-.header h1 {
+.page-header h1 {
   color: #2e7d32;
   font-size: 1.75rem;
   font-weight: 600;
@@ -614,7 +616,7 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .header,
+  .header-content,
   .filters,
   .table-container {
     padding: 0 1rem;
