@@ -85,7 +85,7 @@ npm run dev
 | GET   | `/api/manager/dashboard/sales`    | Временная линия продаж    |
 | GET   | `/api/manager/dashboard/top-products` | Топ продуктов        |
 
-# Тестовые данные для базы данных (`cpo_cp`)
+# Тестовые данные для базы данных (`spo_cp`)
 
 ## Жанры (`Genres`)
 

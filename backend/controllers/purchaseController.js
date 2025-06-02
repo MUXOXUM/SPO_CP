@@ -1,89 +1,44 @@
-const { Purchase, PurchaseItem, Product, Supplier, Employee, sequelize } = require('../models');
+const { Purchase, PurchaseItem, Product, Supplier, User } = require('../models');
 
 // Создание новой поставки
 const createPurchase = async (req, res) => {
-    const t = await sequelize.transaction();
-
     try {
-        const { supplier_id, items } = req.body;
-        const employee = await Employee.findOne({
-            where: { user_id: req.user.user_id }
+        const { supplierId, items } = req.body;
+        const userId = req.user.userId;
+
+        // Создаем закупку
+        const purchase = await Purchase.create({
+            supplier_id: supplierId,
+            user_id: userId,
+            purchase_date: new Date(),
+            status: 'pending'
         });
 
-        if (!employee) {
-            await t.rollback();
-            return res.status(404).json({ error: 'Employee profile not found' });
-        }
-
-        // Проверяем существование поставщика
-        const supplier = await Supplier.findByPk(supplier_id);
-        if (!supplier) {
-            await t.rollback();
-            return res.status(404).json({ error: 'Supplier not found' });
-        }
-
-        // Рассчитываем общую сумму
-        let total_amount = 0;
-        const purchaseItems = [];
-
+        // Добавляем товары в закупку
         for (const item of items) {
-            const product = await Product.findByPk(item.product_id);
-            if (!product) {
-                await t.rollback();
-                return res.status(404).json({
-                    error: `Product with id ${item.product_id} not found`
-                });
-            }
-
-            total_amount += item.unit_price * item.quantity;
-            purchaseItems.push({
-                product,
-                quantity: item.quantity,
-                unit_price: item.unit_price
-            });
-        }
-
-        // Создаем поставку
-        const purchase = await Purchase.create({
-            supplier_id,
-            employee_id: employee.employee_id,
-            total_amount,
-            status: 'pending'
-        }, { transaction: t });
-
-        // Создаем позиции поставки и обновляем количество товаров
-        for (const item of purchaseItems) {
             await PurchaseItem.create({
                 purchase_id: purchase.purchase_id,
-                product_id: item.product.product_id,
+                product_id: item.productId,
                 quantity: item.quantity,
-                unit_price: item.unit_price
-            }, { transaction: t });
+                price: item.price
+            });
 
-            // Обновляем количество товара
-            await item.product.update({
-                stock_quantity: item.product.stock_quantity + item.quantity
-            }, { transaction: t });
+            // Обновляем количество товара на складе
+            const product = await Product.findByPk(item.productId);
+            if (product) {
+                await product.update({
+                    stock_quantity: product.stock_quantity + item.quantity
+                });
+            }
         }
 
-        await t.commit();
-
-        // Получаем поставку с деталями
-        const purchaseWithDetails = await Purchase.findByPk(purchase.purchase_id, {
-            include: [{
-                model: PurchaseItem,
-                include: [Product]
-            }, {
-                model: Supplier
-            }, {
-                model: Employee
-            }]
+        res.status(201).json({
+            message: 'Закупка успешно создана',
+            purchaseId: purchase.purchase_id
         });
-
-        res.status(201).json(purchaseWithDetails);
     } catch (error) {
-        await t.rollback();
-        res.status(500).json({ error: error.message });
+        console.error('Error creating purchase:', error);
+        res.status(500).json({ error: 'Ошибка при создании закупки' });
     }
 };
 
@@ -91,50 +46,83 @@ const createPurchase = async (req, res) => {
 const getAllPurchases = async (req, res) => {
     try {
         const purchases = await Purchase.findAll({
-            include: [{
-                model: PurchaseItem,
-                include: [Product]
-            }, {
-                model: Supplier
-            }, {
-                model: Employee
-            }],
+            include: [
+                {
+                    model: PurchaseItem,
+                    include: [Product]
+                },
+                {
+                    model: Supplier,
+                    attributes: ['name', 'contact_person', 'phone']
+                },
+                {
+                    model: User,
+                    attributes: ['first_name', 'last_name']
+                }
+            ],
             order: [['purchase_date', 'DESC']]
         });
 
-        res.json(purchases);
+        const formattedPurchases = purchases.map(purchase => ({
+            id: purchase.purchase_id,
+            date: purchase.purchase_date,
+            status: purchase.status,
+            supplier: {
+                name: purchase.Supplier.name,
+                contactPerson: purchase.Supplier.contact_person,
+                phone: purchase.Supplier.phone
+            },
+            manager: {
+                name: `${purchase.User.first_name} ${purchase.User.last_name}`
+            },
+            items: purchase.PurchaseItems.map(item => ({
+                id: item.purchase_item_id,
+                quantity: item.quantity,
+                price: parseFloat(item.price),
+                product: {
+                    id: item.Product.product_id,
+                    format: item.Product.format,
+                    title: item.Product.title
+                }
+            })),
+            total: purchase.PurchaseItems.reduce((sum, item) => 
+                sum + (parseFloat(item.price) * item.quantity), 0)
+        }));
+
+        res.json(formattedPurchases);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching purchases:', error);
+        res.status(500).json({ error: 'Ошибка при получении списка закупок' });
     }
 };
 
 // Обновление статуса поставки
 const updatePurchaseStatus = async (req, res) => {
-    const t = await sequelize.transaction();
-
     try {
         const { id } = req.params;
         const { status } = req.body;
 
-        const purchase = await Purchase.findByPk(id, {
-            include: [{
-                model: PurchaseItem,
-                include: [Product]
-            }]
-        });
-
+        const purchase = await Purchase.findByPk(id);
         if (!purchase) {
-            await t.rollback();
-            return res.status(404).json({ error: 'Purchase not found' });
+            return res.status(404).json({ error: 'Закупка не найдена' });
         }
 
-        await purchase.update({ status }, { transaction: t });
+        // Проверяем допустимость статуса
+        const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Недопустимый статус' });
+        }
 
-        await t.commit();
-        res.json(purchase);
+        await purchase.update({ status });
+
+        res.json({
+            id: purchase.purchase_id,
+            status: purchase.status,
+            message: 'Статус закупки успешно обновлен'
+        });
     } catch (error) {
-        await t.rollback();
-        res.status(400).json({ error: error.message });
+        console.error('Error updating purchase status:', error);
+        res.status(500).json({ error: 'Ошибка при обновлении статуса закупки' });
     }
 };
 

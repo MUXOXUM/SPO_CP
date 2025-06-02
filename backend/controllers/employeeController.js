@@ -1,17 +1,42 @@
-const { Employee, User } = require('../models');
+const { User } = require('../models');
 
 // Получение списка всех сотрудников
 const getAllEmployees = async (req, res) => {
     try {
-        const employees = await Employee.findAll({
-            include: [{
-                model: User,
-                attributes: ['email', 'role', 'is_active']
-            }]
+        const employees = await User.findAll({
+            where: {
+                role: ['manager', 'admin'],
+                is_active: true
+            },
+            attributes: [
+                'user_id',
+                'email',
+                'first_name',
+                'last_name',
+                'phone',
+                'position',
+                'hire_date',
+                'salary',
+                'role'
+            ]
         });
-        res.json(employees);
+
+        const formattedEmployees = employees.map(emp => ({
+            id: emp.user_id,
+            email: emp.email,
+            firstName: emp.first_name,
+            lastName: emp.last_name,
+            phone: emp.phone,
+            position: emp.position,
+            hireDate: emp.hire_date,
+            salary: parseFloat(emp.salary),
+            role: emp.role
+        }));
+
+        res.json(formattedEmployees);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching employees:', error);
+        res.status(500).json({ error: 'Ошибка при получении списка сотрудников' });
     }
 };
 
@@ -19,34 +44,54 @@ const getAllEmployees = async (req, res) => {
 const addEmployee = async (req, res) => {
     try {
         const {
-            first_name,
-            last_name,
-            position,
-            email,
-            phone,
-            password
-        } = req.body;
-
-        // Создаем пользователя с ролью manager
-        const user = await User.create({
             email,
             password,
-            role: 'manager'
-        });
-
-        // Создаем профиль сотрудника
-        const employee = await Employee.create({
-            user_id: user.user_id,
-            first_name,
-            last_name,
+            firstName,
+            lastName,
+            phone,
             position,
+            salary,
+            role
+        } = req.body;
+
+        // Проверяем, существует ли пользователь с таким email
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+        }
+
+        // Проверяем роль
+        if (!['manager', 'admin'].includes(role)) {
+            return res.status(400).json({ error: 'Недопустимая роль' });
+        }
+
+        const employee = await User.create({
             email,
-            phone
+            password,
+            first_name: firstName,
+            last_name: lastName,
+            phone,
+            position,
+            hire_date: new Date(),
+            salary,
+            role,
+            is_active: true
         });
 
-        res.status(201).json(employee);
+        res.status(201).json({
+            id: employee.user_id,
+            email: employee.email,
+            firstName: employee.first_name,
+            lastName: employee.last_name,
+            phone: employee.phone,
+            position: employee.position,
+            hireDate: employee.hire_date,
+            salary: parseFloat(employee.salary),
+            role: employee.role
+        });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Error adding employee:', error);
+        res.status(500).json({ error: 'Ошибка при добавлении сотрудника' });
     }
 };
 
@@ -55,27 +100,56 @@ const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            first_name,
-            last_name,
+            firstName,
+            lastName,
+            phone,
             position,
-            phone
+            salary,
+            role,
+            is_active
         } = req.body;
 
-        const employee = await Employee.findByPk(id);
+        const employee = await User.findOne({
+            where: {
+                user_id: id,
+                role: ['manager', 'admin']
+            }
+        });
+
         if (!employee) {
-            return res.status(404).json({ error: 'Employee not found' });
+            return res.status(404).json({ error: 'Сотрудник не найден' });
+        }
+
+        // Проверяем роль
+        if (role && !['manager', 'admin'].includes(role)) {
+            return res.status(400).json({ error: 'Недопустимая роль' });
         }
 
         await employee.update({
-            first_name,
-            last_name,
+            first_name: firstName,
+            last_name: lastName,
+            phone,
             position,
-            phone
+            salary,
+            role,
+            is_active: is_active !== undefined ? is_active : employee.is_active
         });
 
-        res.json(employee);
+        res.json({
+            id: employee.user_id,
+            email: employee.email,
+            firstName: employee.first_name,
+            lastName: employee.last_name,
+            phone: employee.phone,
+            position: employee.position,
+            hireDate: employee.hire_date,
+            salary: parseFloat(employee.salary),
+            role: employee.role,
+            isActive: employee.is_active
+        });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Error updating employee:', error);
+        res.status(500).json({ error: 'Ошибка при обновлении данных сотрудника' });
     }
 };
 

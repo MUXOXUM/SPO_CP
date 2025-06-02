@@ -1,110 +1,90 @@
-const { Order, OrderItem, Product, Customer, sequelize } = require('../models');
+const { Order, OrderItem, Product, Album, User } = require('../models');
 
 // Создание нового заказа
 const createOrder = async (req, res) => {
-    const t = await sequelize.transaction();
-
     try {
-        const { items, shipping_address } = req.body;
-        const customer = await Customer.findOne({ 
-            where: { user_id: req.user.user_id }
-        });
-
-        if (!customer) {
-            await t.rollback();
-            return res.status(404).json({ error: 'Customer profile not found' });
-        }
-
-        // Проверяем наличие товаров и рассчитываем общую сумму
-        let total_amount = 0;
-        const orderItems = [];
-
-        for (const item of items) {
-            const product = await Product.findByPk(item.product_id);
-            if (!product) {
-                await t.rollback();
-                return res.status(404).json({ 
-                    error: `Product with id ${item.product_id} not found` 
-                });
-            }
-
-            if (product.stock_quantity < item.quantity) {
-                await t.rollback();
-                return res.status(400).json({ 
-                    error: `Not enough stock for product ${product.product_id}` 
-                });
-            }
-
-            total_amount += product.price * item.quantity;
-            orderItems.push({
-                product,
-                quantity: item.quantity
-            });
-        }
+        const { items } = req.body;
+        const userId = req.user.userId;
 
         // Создаем заказ
         const order = await Order.create({
-            customer_id: customer.customer_id,
-            total_amount,
-            shipping_address: shipping_address || customer.address,
+            user_id: userId,
+            order_date: new Date(),
             status: 'pending'
-        }, { transaction: t });
-
-        // Создаем позиции заказа и обновляем количество товаров
-        for (const item of orderItems) {
-            await OrderItem.create({
-                order_id: order.order_id,
-                product_id: item.product.product_id,
-                quantity: item.quantity,
-                unit_price: item.product.price
-            }, { transaction: t });
-
-            // Обновляем количество товара
-            await item.product.update({
-                stock_quantity: item.product.stock_quantity - item.quantity
-            }, { transaction: t });
-        }
-
-        await t.commit();
-
-        // Получаем заказ с деталями
-        const orderWithDetails = await Order.findByPk(order.order_id, {
-            include: [{
-                model: OrderItem,
-                include: [Product]
-            }]
         });
 
-        res.status(201).json(orderWithDetails);
+        // Добавляем товары в заказ
+        for (const item of items) {
+            await OrderItem.create({
+                order_id: order.order_id,
+                product_id: item.productId,
+                quantity: item.quantity,
+                price: item.price
+            });
+
+            // Обновляем количество товара на складе
+            const product = await Product.findByPk(item.productId);
+            if (product) {
+                await product.update({
+                    stock_quantity: product.stock_quantity - item.quantity
+                });
+            }
+        }
+
+        res.status(201).json({
+            message: 'Заказ успешно создан',
+            orderId: order.order_id
+        });
     } catch (error) {
-        await t.rollback();
-        res.status(500).json({ error: error.message });
+        console.error('Error creating order:', error);
+        res.status(500).json({ error: 'Ошибка при создании заказа' });
     }
 };
 
 // Получение списка заказов пользователя
 const getUserOrders = async (req, res) => {
     try {
-        const customer = await Customer.findOne({ 
-            where: { user_id: req.user.user_id } 
-        });
-
-        if (!customer) {
-            return res.status(404).json({ error: 'Customer profile not found' });
-        }
+        const userId = req.user.userId;
 
         const orders = await Order.findAll({
-            where: { customer_id: customer.customer_id },
-            include: [{
-                model: OrderItem,
-                include: [Product]
-            }],
+            where: { user_id: userId },
+            include: [
+                {
+                    model: OrderItem,
+                    include: [
+                        {
+                            model: Product,
+                            include: [Album]
+                        }
+                    ]
+                }
+            ],
             order: [['order_date', 'DESC']]
         });
 
-        res.json(orders);
+        const formattedOrders = orders.map(order => ({
+            id: order.order_id,
+            date: order.order_date,
+            status: order.status,
+            items: order.OrderItems.map(item => ({
+                id: item.order_item_id,
+                quantity: item.quantity,
+                price: parseFloat(item.price),
+                product: {
+                    id: item.Product.product_id,
+                    format: item.Product.format,
+                    albumTitle: item.Product.Album.title,
+                    artist: item.Product.Album.artist
+                }
+            })),
+            total: order.OrderItems.reduce((sum, item) => 
+                sum + (parseFloat(item.price) * item.quantity), 0)
+        }));
+
+        res.json(formattedOrders);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching user orders:', error);
+        res.status(500).json({ error: 'Ошибка при получении заказов' });
     }
 };
 
@@ -112,32 +92,63 @@ const getUserOrders = async (req, res) => {
 const getOrderDetails = async (req, res) => {
     try {
         const { id } = req.params;
-        const customer = await Customer.findOne({ 
-            where: { user_id: req.user.user_id } 
-        });
-
-        if (!customer) {
-            return res.status(404).json({ error: 'Customer profile not found' });
-        }
+        const userId = req.user.userId;
 
         const order = await Order.findOne({
             where: { 
                 order_id: id,
-                customer_id: customer.customer_id
+                user_id: userId
             },
-            include: [{
-                model: OrderItem,
-                include: [Product]
-            }]
+            include: [
+                {
+                    model: OrderItem,
+                    include: [
+                        {
+                            model: Product,
+                            include: [Album]
+                        }
+                    ]
+                },
+                {
+                    model: User,
+                    attributes: ['first_name', 'last_name', 'email', 'phone', 'address']
+                }
+            ]
         });
 
         if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+            return res.status(404).json({ error: 'Заказ не найден' });
         }
 
-        res.json(order);
+        const formattedOrder = {
+            id: order.order_id,
+            date: order.order_date,
+            status: order.status,
+            customer: {
+                name: `${order.User.first_name} ${order.User.last_name}`,
+                email: order.User.email,
+                phone: order.User.phone,
+                address: order.User.address
+            },
+            items: order.OrderItems.map(item => ({
+                id: item.order_item_id,
+                quantity: item.quantity,
+                price: parseFloat(item.price),
+                product: {
+                    id: item.Product.product_id,
+                    format: item.Product.format,
+                    albumTitle: item.Product.Album.title,
+                    artist: item.Product.Album.artist
+                }
+            })),
+            total: order.OrderItems.reduce((sum, item) => 
+                sum + (parseFloat(item.price) * item.quantity), 0)
+        };
+
+        res.json(formattedOrder);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching order details:', error);
+        res.status(500).json({ error: 'Ошибка при получении деталей заказа' });
     }
 };
 

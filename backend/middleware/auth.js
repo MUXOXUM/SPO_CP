@@ -2,37 +2,54 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 require('dotenv').config();
 
-
-const auth = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
         if (!token) {
-            throw new Error();
+            return res.status(401).json({ error: 'Требуется авторизация' });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findOne({ where: { user_id: decoded.user_id } });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        req.user = decoded;
 
+        // Проверяем существование и активность пользователя
+        const user = await User.findByPk(decoded.userId);
         if (!user || !user.is_active) {
-            throw new Error();
+            return res.status(403).json({ error: 'Доступ запрещен' });
         }
 
-        req.token = token;
-        req.user = user;
         next();
     } catch (error) {
-        res.status(401).json({ error: 'Please authenticate.' });
+        return res.status(403).json({ error: 'Недействительный токен' });
     }
 };
 
-const checkRole = (roles) => {
-    return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ error: 'Access denied.' });
-        }
-        next();
-    };
+const isAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Требуются права администратора' });
+    }
+    next();
 };
 
-module.exports = { auth, checkRole }; 
+const isManager = (req, res, next) => {
+    if (req.user.role !== 'manager' && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Требуются права менеджера' });
+    }
+    next();
+};
+
+const isCustomer = (req, res, next) => {
+    if (req.user.role !== 'customer' && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Требуются права покупателя' });
+    }
+    next();
+};
+
+module.exports = {
+    authenticateToken,
+    isAdmin,
+    isManager,
+    isCustomer
+}; 
