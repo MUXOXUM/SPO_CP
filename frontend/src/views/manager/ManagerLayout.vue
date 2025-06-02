@@ -2,7 +2,7 @@
   <div class="manager-layout">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>Music CRM</h2>
+        <h2>Музык CRM</h2>
         <p class="role-badge">Менеджер</p>
       </div>
       <nav class="sidebar-nav">

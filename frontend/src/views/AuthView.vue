@@ -1,7 +1,7 @@
 <template>
   <div class="auth-container">
     <div class="auth-card">
-      <h1 class="auth-title">Music CRM</h1>
+      <h1 class="auth-title">Музык CRM</h1>
       <div class="auth-tabs">
         <button 
           :class="['tab-btn', { active: activeTab === 'login' }]"
