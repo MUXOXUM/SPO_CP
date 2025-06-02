@@ -3,7 +3,7 @@ import axios from 'axios';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
   }),
 
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', {
         
         this.token = response.data.token;
         this.user = response.data.user;
-        localStorage.setItem('token', this.token);
+        this.persistUserData();
         
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         
@@ -47,18 +47,38 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await axios.get('http://localhost:3000/api/auth/profile');
         this.user = response.data;
+        this.persistUserData();
         return { success: true };
       } catch (error) {
         console.error('Profile fetch error:', error);
+        if (error.response?.status === 401) {
+          this.logout();
+        }
         return { success: false, error: error.response?.data?.message || 'Ошибка получения профиля' };
       }
+    },
+
+    persistUserData() {
+      localStorage.setItem('token', this.token);
+      localStorage.setItem('user', JSON.stringify(this.user));
+    },
+
+    clearUserData() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      delete axios.defaults.headers.common['Authorization'];
     },
 
     logout() {
       this.user = null;
       this.token = null;
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
+      this.clearUserData();
     },
+
+    async initializeAuth() {
+      if (this.token) {
+        await this.fetchProfile();
+      }
+    }
   },
 }); 

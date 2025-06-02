@@ -46,27 +46,25 @@
 
       <!-- Register Form -->
       <form v-else @submit.prevent="handleRegister" class="auth-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="register-first-name">Имя:</label>
-            <input
-              id="register-first-name"
-              v-model="registerForm.first_name"
-              type="text"
-              required
-              placeholder="Введите имя"
-            >
-          </div>
-          <div class="form-group">
-            <label for="register-last-name">Фамилия:</label>
-            <input
-              id="register-last-name"
-              v-model="registerForm.last_name"
-              type="text"
-              required
-              placeholder="Введите фамилию"
-            >
-          </div>
+        <div class="form-group">
+          <label for="register-first-name">Имя:</label>
+          <input
+            id="register-first-name"
+            v-model="registerForm.first_name"
+            type="text"
+            required
+            placeholder="Введите имя"
+          >
+        </div>
+        <div class="form-group">
+          <label for="register-last-name">Фамилия:</label>
+          <input
+            id="register-last-name"
+            v-model="registerForm.last_name"
+            type="text"
+            required
+            placeholder="Введите фамилию"
+          >
         </div>
         <div class="form-group">
           <label for="register-email">Email:</label>
@@ -213,16 +211,10 @@ const handleRegister = async () => {
   gap: 1.5rem;
 }
 
-.form-row {
-  display: flex;
-  gap: 1rem;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1;
 }
 
 label {
@@ -285,10 +277,6 @@ input:focus {
 @media (max-width: 480px) {
   .auth-card {
     padding: 1.5rem;
-  }
-
-  .form-row {
-    flex-direction: column;
   }
 }
 </style> 
