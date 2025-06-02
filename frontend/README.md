@@ -7,17 +7,14 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 
 Вот переписанный текст из изображения в виде таблицы:
 
-| album_id (PK) | title               | release_year | duration | label                | artist_id | genre_id |
-|---------------|---------------------|--------------|----------|----------------------|-----------|----------|
-| 1             | Живой Рок           | 2020         | 45       | Музыкальный лейбл №1 | 1         | 1        |
-| 2             | Мелодии Попа        | 2019         | 50       | Тор Hits             | 2         | 2        |
-| 3             | Джазовый Вечер      | 2018         | 60       | Jazz Records         | 3         | 3        |
-| 4             | Классические Хиты   | 2017         | 70       | Classic Sound        | 4         | 4        |
-| 5             | Улицы Хип-хопа      | 2021         | 40       | Urban Beats          | 5         | 5        |
-| 6             | Звуки Кантри        | 2016         | 55       | Country Music Ltd.   | 6         | 6        |
-| 7             | Электронный Мир     | 2022         | 48       | Electro Records      | 7         | 7        |
+| product_id (PK) | format    | price    | stock_quantity | barcode        | condition | album_id |
+|-----------------|-----------|----------|----------------|----------------|-----------|----------|
+| 1               | CD        | 499.99   | 15             | 1234567890123  | Новый    | 1        |
+| 2               | Bwhun     | 1299.50  | 10             | 2345678901234  | Новый   | 2        |
+| 3               | Цифровой  | 299.99   | 100            | 3456789012345  | Новый   | 3        |
 
 **Примечания:**
-- `album_id` является первичным ключом (PK) типа integer
-- `title` и `label` имеют тип character varying (255) (строка до 255 символов)
-- Остальные поля (`release_year`, `duration`, `artist_id`, `genre_id`) имеют тип integer
+- `product_id` — первичный ключ (PK) типа `integer`
+- `format`, `barcode`, `condition` — строки (`character varying (255)`)
+- `price` — числовой тип с точностью до 2 знаков (`numeric(10,2)`)
+- `stock_quantity` и `album_id` — целые числа (`integer`)

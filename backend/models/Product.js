@@ -7,14 +7,6 @@ const Product = sequelize.define('Product', {
         primaryKey: true,
         autoIncrement: true
     },
-    title: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    artist: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
     format: {
         type: DataTypes.STRING,
         allowNull: false
@@ -25,6 +17,7 @@ const Product = sequelize.define('Product', {
     },
     stock_quantity: {
         type: DataTypes.INTEGER,
+        allowNull: false,
         defaultValue: 0
     },
     barcode: {
@@ -34,8 +27,17 @@ const Product = sequelize.define('Product', {
     condition: {
         type: DataTypes.STRING,
         defaultValue: 'Новый'
+    },
+    album_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Albums',
+            key: 'album_id'
+        }
     }
 }, {
+    tableName: 'Products',
     timestamps: false
 });
 

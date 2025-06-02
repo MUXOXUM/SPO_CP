@@ -28,29 +28,39 @@ const getAlbums = async (req, res) => {
                     attributes: [
                         'format',
                         'price',
-                        ['stock_quantity', 'inStock']
+                        'stock_quantity'
                     ],
-                    required: false
+                    required: false,
+                    where: {
+                        // Если нужна фильтрация по формату
+                        ...(req.query.format ? { format: req.query.format } : {})
+                    }
                 }
-            ],
-            raw: true,
-            nest: true
+            ]
         });
 
         // Преобразуем данные в формат, ожидаемый фронтендом
-        const formattedAlbums = albums.map(album => ({
-            id: album.id,
-            title: album.title,
-            artist: album.Artist.name,
-            formatId: album.Product?.format || 'CD', // По умолчанию CD если нет продукта
-            price: parseFloat(album.Product?.price) || 0,
-            inStock: parseInt(album.Product?.inStock) || 0,
-            releaseYear: album.release_year,
-            duration: album.duration,
-            label: album.label,
-            genre: album.Genre.name,
-            coverImage: null // TODO: Добавить поддержку изображений
-        }));
+        const formattedAlbums = albums.map(album => {
+            // Находим продукт с наименьшей ценой для альбома
+            const products = album.Products || [];
+            const cheapestProduct = products.length > 0 
+                ? products.reduce((min, p) => p.price < min.price ? p : min, products[0])
+                : null;
+
+            return {
+                id: album.album_id,
+                title: album.title,
+                artist: album.Artist.name,
+                formatId: cheapestProduct?.format || 'CD',
+                price: cheapestProduct ? parseFloat(cheapestProduct.price) : 0,
+                inStock: cheapestProduct ? parseInt(cheapestProduct.stock_quantity) : 0,
+                releaseYear: album.release_year,
+                duration: album.duration,
+                label: album.label,
+                genre: album.Genre.name,
+                coverImage: null
+            };
+        });
 
         console.log('Sending albums:', formattedAlbums);
         res.json(formattedAlbums);
@@ -107,32 +117,42 @@ const getAlbumDetails = async (req, res) => {
                     attributes: [
                         'format',
                         'price',
-                        ['stock_quantity', 'inStock']
+                        'stock_quantity'
                     ],
                     required: false
                 }
-            ],
-            raw: true,
-            nest: true
+            ]
         });
 
         if (!album) {
             return res.status(404).json({ error: 'Album not found' });
         }
 
+        // Находим продукт с наименьшей ценой
+        const products = album.Products || [];
+        const cheapestProduct = products.length > 0 
+            ? products.reduce((min, p) => p.price < min.price ? p : min, products[0])
+            : null;
+
         // Преобразуем в формат, ожидаемый фронтендом
         const formattedAlbum = {
             id: album.album_id,
             title: album.title,
             artist: album.Artist.name,
-            formatId: album.Product?.format || 'CD',
-            price: parseFloat(album.Product?.price) || 0,
-            inStock: parseInt(album.Product?.inStock) || 0,
+            formatId: cheapestProduct?.format || 'CD',
+            price: cheapestProduct ? parseFloat(cheapestProduct.price) : 0,
+            inStock: cheapestProduct ? parseInt(cheapestProduct.stock_quantity) : 0,
             releaseYear: album.release_year,
             duration: album.duration,
             label: album.label,
             genre: album.Genre.name,
-            coverImage: null
+            coverImage: null,
+            // Добавляем информацию о всех доступных форматах
+            availableFormats: products.map(p => ({
+                format: p.format,
+                price: parseFloat(p.price),
+                inStock: parseInt(p.stock_quantity)
+            }))
         };
 
         console.log('Sending album details:', formattedAlbum);
