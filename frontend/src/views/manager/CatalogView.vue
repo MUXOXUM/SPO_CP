@@ -37,8 +37,8 @@
       <table class="albums-table">
         <thead>
           <tr>
-            <th>Обложка</th>
             <th>Название</th>
+            <th>Лейбл</th>
             <th>Исполнитель</th>
             <th>Год</th>
             <th>Жанр</th>
@@ -59,7 +59,6 @@
             </td>
             <td>
               <div class="album-info">
-                <span class="album-title">{{ album.title }}</span>
                 <span class="album-label">{{ album.label }}</span>
               </div>
             </td>
