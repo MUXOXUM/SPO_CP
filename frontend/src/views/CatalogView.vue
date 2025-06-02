@@ -41,7 +41,11 @@
     <div v-else class="albums-grid">
       <div v-for="album in filteredAlbums" :key="album.id" class="album-card">
         <div class="album-image">
-          <img :src="album.coverImage || '/placeholder.jpg'" :alt="album.title">
+          <img 
+            :src="getFormatIcon(album.formatId)" 
+            :alt="getFormatName(album.formatId)"
+            class="album-format-img"
+          >
           <div class="album-overlay">
             <button @click="addToCart(album)" class="add-to-cart-btn">
               <span class="material-icons">shopping_cart</span>
@@ -92,6 +96,33 @@ const getFormatName = (formatId) => {
   return format ? format.name : '';
 };
 
+const getFormatIcon = (formatId) => {
+  const format = formats.value.find(f => f.id === formatId);
+  if (!format) {
+    console.log('Format not found for id:', formatId);
+    return '';
+  }
+  
+  const formatName = format.name.toLowerCase();
+  console.log('Format name:', formatName);
+  
+  switch (formatName) {
+    case 'винил':
+      return '/vinyl.png';
+    case 'cd':
+      return '/cd.png';
+    case 'кассета':
+      return '/vhs.png';
+    case 'цифровая':
+    case 'цифровой':
+    case 'цифровая запись':
+      return '/digit.png';
+    default:
+      console.log('No matching case for format:', formatName);
+      return '';
+  }
+};
+
 const fetchAlbums = async () => {
   try {
     const response = await axios.get('/api/catalog/albums');
@@ -104,6 +135,7 @@ const fetchAlbums = async () => {
 const fetchFormats = async () => {
   try {
     const response = await axios.get('/api/catalog/formats');
+    console.log('Received formats:', response.data);
     formats.value = response.data;
   } catch (error) {
     console.error('Error fetching formats:', error);
@@ -290,6 +322,14 @@ onMounted(() => {
   overflow: hidden;
 }
 
+.album-format-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2rem;
+  background-color: #f8f9fa;
+}
+
 .album-image img {
   width: 100%;
   height: 100%;
@@ -298,7 +338,7 @@ onMounted(() => {
 }
 
 .album-card:hover .album-image img {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .album-overlay {
