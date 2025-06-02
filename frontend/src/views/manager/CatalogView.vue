@@ -40,6 +40,8 @@
             <th>Обложка</th>
             <th>Название</th>
             <th>Исполнитель</th>
+            <th>Год</th>
+            <th>Жанр</th>
             <th>Формат</th>
             <th>Цена</th>
             <th>В наличии</th>
@@ -55,8 +57,19 @@
                 class="album-cover"
               >
             </td>
-            <td>{{ album.title }}</td>
+            <td>
+              <div class="album-info">
+                <span class="album-title">{{ album.title }}</span>
+                <span class="album-label">{{ album.label }}</span>
+              </div>
+            </td>
             <td>{{ album.artist }}</td>
+            <td>{{ album.releaseYear }}</td>
+            <td>
+              <span class="genre-badge">
+                {{ album.genre }}
+              </span>
+            </td>
             <td>
               <span class="format-badge">
                 {{ getFormatName(album.formatId) }}
@@ -202,7 +215,7 @@ const albumForm = ref({
 // Computed
 const filteredAlbums = computed(() => {
   return albums.value.filter(album => {
-    const matchesSearch = (
+    const matchesSearch = album.title && (
       album.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       album.artist.toLowerCase().includes(searchQuery.value.toLowerCase())
     );
@@ -215,18 +228,46 @@ const filteredAlbums = computed(() => {
 const fetchAlbums = async () => {
   try {
     const response = await axios.get('/api/catalog/albums');
-    albums.value = response.data;
+    console.log('Received albums:', response.data); // Отладочный лог
+    
+    if (!Array.isArray(response.data)) {
+      console.error('Expected array of albums, got:', response.data);
+      albums.value = [];
+      return;
+    }
+
+    albums.value = response.data.map(album => ({
+      ...album,
+      title: album.title || 'Без названия',
+      artist: album.artist || 'Неизвестный исполнитель',
+      formatId: album.formatId || album.format,
+      inStock: Number(album.inStock) || 0,
+      price: Number(album.price) || 0
+    }));
   } catch (error) {
     console.error('Error fetching albums:', error);
+    albums.value = [];
   }
 };
 
 const fetchFormats = async () => {
   try {
     const response = await axios.get('/api/catalog/formats');
-    formats.value = response.data;
+    console.log('Received formats:', response.data); // Отладочный лог
+    
+    if (!Array.isArray(response.data)) {
+      console.error('Expected array of formats, got:', response.data);
+      formats.value = [];
+      return;
+    }
+
+    formats.value = response.data.map(format => ({
+      id: format.id || format,
+      name: format.name || format
+    }));
   } catch (error) {
     console.error('Error fetching formats:', error);
+    formats.value = [];
   }
 };
 
@@ -700,6 +741,31 @@ onMounted(() => {
   background-color: #1b5e20;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+}
+
+.album-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.album-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.album-label {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.genre-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {

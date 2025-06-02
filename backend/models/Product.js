@@ -7,6 +7,14 @@ const Product = sequelize.define('Product', {
         primaryKey: true,
         autoIncrement: true
     },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    artist: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     format: {
         type: DataTypes.STRING,
         allowNull: false
@@ -24,7 +32,8 @@ const Product = sequelize.define('Product', {
         unique: true
     },
     condition: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        defaultValue: 'Новый'
     }
 }, {
     timestamps: false

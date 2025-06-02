@@ -12,15 +12,27 @@ const Album = sequelize.define('Album', {
         allowNull: false
     },
     release_year: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+        allowNull: false
     },
     duration: {
-        type: DataTypes.INTEGER // в секундах
+        type: DataTypes.INTEGER,
+        allowNull: false
     },
     label: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    artist_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    genre_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
 }, {
+    tableName: 'Albums',
     timestamps: false
 });
 

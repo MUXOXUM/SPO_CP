@@ -29,7 +29,7 @@ const routes = [
       },
       {
         path: 'dashboard',
-        name: 'Dashboard',
+        name: 'ManagerDashboard',
         component: () => import('../views/manager/DashboardView.vue')
       },
       {
@@ -39,7 +39,7 @@ const routes = [
       },
       {
         path: 'employees',
-        name: 'Employees',
+        name: 'ManagerEmployees',
         component: () => import('../views/manager/EmployeesView.vue')
       }
     ]
