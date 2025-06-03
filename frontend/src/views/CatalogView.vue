@@ -4,6 +4,7 @@
       <div class="header-content">
         <h1>Каталог музыкальных записей</h1>
         <div class="user-controls">
+          <CartWidget />
           <button @click="handleLogout" class="logout-btn">
             <span class="material-icons">logout</span>
             <span>Выйти</span>
@@ -47,9 +48,9 @@
             class="album-format-img"
           >
           <div class="album-overlay">
-            <button @click="addToCart(album)" class="add-to-cart-btn">
+            <button @click="addToCart(album)" class="add-to-cart-btn" :disabled="!album.inStock">
               <span class="material-icons">shopping_cart</span>
-              <span>В корзину</span>
+              <span>{{ album.inStock ? 'В корзину' : 'Нет в наличии' }}</span>
             </button>
           </div>
         </div>
@@ -73,9 +74,12 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import axios from 'axios';
+import { useCartStore } from '../stores/cartStore';
+import CartWidget from '../components/CartWidget.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const cartStore = useCartStore();
 
 const albums = ref([]);
 const formats = ref([]);
@@ -141,8 +145,9 @@ const formatPrice = (price) => {
 };
 
 const addToCart = (album) => {
-  // TODO: Implement cart functionality
-  alert('Функция корзины будет добавлена позже');
+  if (album.inStock) {
+    cartStore.addToCart(album);
+  }
 };
 
 const handleLogout = () => {
@@ -191,6 +196,7 @@ onMounted(() => {
 .user-controls {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 .logout-btn {
@@ -414,9 +420,14 @@ onMounted(() => {
   font-family: 'Montserrat', sans-serif;
 }
 
-.add-to-cart-btn:hover {
+.add-to-cart-btn:hover:not(:disabled) {
   background-color: #1b5e20;
   transform: scale(1.05);
+}
+
+.add-to-cart-btn:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
