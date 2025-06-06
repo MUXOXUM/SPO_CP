@@ -127,39 +127,38 @@ const getSalesTimeline = async (req, res) => {
     }
 };
 
-// Получение топ продаваемых товаров
-const getTopProducts = async (req, res) => {
-    console.log('[Dashboard] Getting top products...');
+// Получение статистики роста числа клиентов
+const getCustomerGrowth = async (req, res) => {
+    console.log('[Dashboard] Getting customer growth stats...');
     try {
-        console.log('[Dashboard] Executing query for top products...');
-        const topProducts = await Product.findAll({
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+        
+        console.log(`[Dashboard] Date range: ${startOfMonth.toISOString()} - ${today.toISOString()}`);
+
+        const customerGrowth = await User.findAll({
             attributes: [
-                'product_id',
-                'format',
-                [Sequelize.fn('SUM', Sequelize.col('OrderItems.quantity')), 'total_sold'],
-                [Sequelize.fn('SUM', 
-                    Sequelize.literal('OrderItems.quantity * OrderItems.price')
-                ), 'total_revenue']
+                [Sequelize.fn('DATE', Sequelize.col('createdAt')), 'date'],
+                [Sequelize.fn('COUNT', Sequelize.col('user_id')), 'new_customers']
             ],
-            include: [{
-                model: OrderItem,
-                attributes: [],
-                required: false
-            }],
-            group: ['Products.product_id', 'Products.format'],
-            order: [[Sequelize.literal('total_sold DESC')]],
-            limit: 10,
+            where: {
+                role: 'customer',
+                createdAt: {
+                    [Sequelize.Op.between]: [startOfMonth, today]
+                }
+            },
+            group: [Sequelize.fn('DATE', Sequelize.col('createdAt'))],
+            order: [[Sequelize.fn('DATE', Sequelize.col('createdAt')), 'ASC']],
             raw: true
         });
 
-        console.log(`[Dashboard] Found ${topProducts.length} top products`);
-        console.log('[Dashboard] Top products sample:', JSON.stringify(topProducts[0] || {}, null, 2));
+        console.log(`[Dashboard] Found customer growth data for ${customerGrowth.length} days`);
+        console.log('[Dashboard] Growth data sample:', JSON.stringify(customerGrowth[0] || {}, null, 2));
         
-        res.json(topProducts);
+        res.json(customerGrowth);
     } catch (error) {
-        console.error('[Dashboard] Error in getTopProducts:', error);
+        console.error('[Dashboard] Error in getCustomerGrowth:', error);
         console.error('[Dashboard] Error stack:', error.stack);
-        console.error('[Dashboard] SQL Query:', error.sql);
         res.status(500).json({ error: error.message });
     }
 };
@@ -167,5 +166,5 @@ const getTopProducts = async (req, res) => {
 module.exports = {
     getGeneralStats,
     getSalesTimeline,
-    getTopProducts
+    getCustomerGrowth
 }; 

@@ -76,20 +76,20 @@
           </div>
         </div>
 
-        <!-- Top Products -->
+        <!-- Customer Growth -->
         <div class="chart-card">
           <div class="chart-header">
-            <h3>Топ продаваемых товаров</h3>
+            <h3>Прирост клиентов</h3>
             <div class="chart-legend">
-              <span class="legend-dot"></span>
-              <span>Количество продаж</span>
+              <span class="legend-dot customers-dot"></span>
+              <span>Новые клиенты</span>
             </div>
           </div>
           <div class="chart-container">
-            <Bar
-              v-if="topProductsChartData"
-              :data="topProductsChartData"
-              :options="topProductsChartOptions"
+            <Line
+              v-if="customerGrowthData"
+              :data="customerGrowthData"
+              :options="customerGrowthOptions"
             />
           </div>
         </div>
@@ -100,14 +100,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Line, Bar } from 'vue-chartjs';
+import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
   Legend
@@ -120,7 +119,6 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
   Legend
@@ -137,7 +135,7 @@ const stats = ref({
 
 // Chart data
 const salesChartData = ref(null);
-const topProductsChartData = ref(null);
+const customerGrowthData = ref(null);
 
 // Chart options
 const salesChartOptions = {
@@ -163,23 +161,25 @@ const salesChartOptions = {
   }
 };
 
-const topProductsChartOptions = {
+const customerGrowthOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  indexAxis: 'y',
   plugins: {
     legend: {
       display: false
     }
   },
   scales: {
-    x: {
+    y: {
       beginAtZero: true,
       grid: {
         color: '#e0e0e0'
+      },
+      ticks: {
+        stepSize: 1
       }
     },
-    y: {
+    x: {
       grid: {
         display: false
       }
@@ -232,15 +232,20 @@ const fetchDashboardData = async () => {
       beginAtZero: true
     };
 
-    // Получаем топ продуктов
-    const topProductsResponse = await axios.get('/api/manager/dashboard/top-products');
-    topProductsChartData.value = {
-      labels: topProductsResponse.data.map(item => `${item.format} #${item.product_id}`),
+    // Получаем данные по росту клиентов
+    const customerGrowthResponse = await axios.get('/api/manager/dashboard/customer-growth');
+    customerGrowthData.value = {
+      labels: customerGrowthResponse.data.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+      }),
       datasets: [{
-        label: 'Продажи',
-        data: topProductsResponse.data.map(item => item.total_sold),
-        backgroundColor: '#2e7d32',
-        borderRadius: 4
+        label: 'Новые клиенты',
+        data: customerGrowthResponse.data.map(item => item.new_customers),
+        borderColor: '#9c27b0',
+        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+        fill: true,
+        tension: 0.4
       }]
     };
   } catch (error) {
@@ -417,7 +422,6 @@ onMounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #2e7d32;
 }
 
 .revenue-dot {
@@ -426,6 +430,10 @@ onMounted(() => {
 
 .orders-dot {
   background-color: #1976d2;
+}
+
+.customers-dot {
+  background-color: #9c27b0;
 }
 
 .chart-container {
