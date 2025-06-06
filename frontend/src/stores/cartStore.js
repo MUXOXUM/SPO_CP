@@ -2,21 +2,23 @@ import { defineStore } from 'pinia';
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
-    items: [],
+    items: []
   }),
 
   getters: {
-    totalItems: (state) => {
-      return state.items.reduce((total, item) => total + (item.quantity || 0), 0);
+    totalItems: (state) => state.items.length,
+    
+    totalAmount: (state) => {
+      return state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     },
-    totalPrice: (state) => {
-      return state.items.reduce((total, item) => total + (item.price || 0) * (item.quantity || 0), 0);
-    },
+    
+    cartItems: (state) => state.items
   },
 
   actions: {
     addToCart(album) {
       const existingItem = this.items.find(item => item.id === album.id && item.formatId === album.formatId);
+      
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
@@ -24,23 +26,22 @@ export const useCartStore = defineStore('cart', {
           id: album.id,
           title: album.title,
           artist: album.artist,
-          price: album.price || 0,
           formatId: album.formatId,
-          format: album.format,
+          price: album.price,
           quantity: 1
         });
       }
     },
 
-    removeFromCart(albumId, formatId) {
-      const index = this.items.findIndex(item => item.id === albumId && item.formatId === formatId);
-      if (index > -1) {
+    removeFromCart(itemId, formatId) {
+      const index = this.items.findIndex(item => item.id === itemId && item.formatId === formatId);
+      if (index !== -1) {
         this.items.splice(index, 1);
       }
     },
 
-    updateQuantity(albumId, formatId, quantity) {
-      const item = this.items.find(item => item.id === albumId && item.formatId === formatId);
+    updateQuantity(itemId, formatId, quantity) {
+      const item = this.items.find(item => item.id === itemId && item.formatId === formatId);
       if (item) {
         item.quantity = Math.max(1, quantity);
       }
