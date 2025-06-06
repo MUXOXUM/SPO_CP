@@ -1,61 +1,86 @@
-const { Order, Product, Customer, Review, sequelize } = require('../models');
-const { Op } = require('sequelize');
+const { Order, Product, User, Review, OrderItem } = require('../models');
+const { Sequelize } = require('sequelize');
+const sequelize = require('../config/database');
 
 // Получение общей статистики
 const getGeneralStats = async (req, res) => {
+    console.log('[Dashboard] Getting general stats...');
     try {
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        console.log(`[Dashboard] Date range: ${startOfMonth.toISOString()} - ${endOfMonth.toISOString()}`);
 
         // Статистика по заказам
+        console.log('[Dashboard] Fetching order statistics...');
         const orderStats = await Order.findAll({
             attributes: [
-                [sequelize.fn('COUNT', sequelize.col('order_id')), 'total_orders'],
-                [sequelize.fn('SUM', sequelize.col('total_amount')), 'total_revenue']
+                [Sequelize.fn('COUNT', Sequelize.col('order_id')), 'total_orders'],
+                [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'total_revenue']
             ],
             where: {
                 order_date: {
-                    [Op.between]: [startOfMonth, endOfMonth]
+                    [Sequelize.Op.between]: [startOfMonth, endOfMonth]
                 }
             }
         });
+        console.log('[Dashboard] Order stats:', JSON.stringify(orderStats[0]?.dataValues || {}, null, 2));
 
-        // Количество клиентов
-        const customerCount = await Customer.count();
+        // Количество клиентов (только с ролью customer)
+        console.log('[Dashboard] Counting active customers...');
+        const customerCount = await User.count({
+            where: {
+                role: 'customer',
+                is_active: true
+            }
+        });
+        console.log(`[Dashboard] Active customers count: ${customerCount}`);
 
         // Товары с низким запасом (меньше 5 штук)
+        console.log('[Dashboard] Checking low stock products...');
         const lowStockProducts = await Product.count({
             where: {
                 stock_quantity: {
-                    [Op.lt]: 5
+                    [Sequelize.Op.lt]: 5
                 }
             }
         });
+        console.log(`[Dashboard] Low stock products count: ${lowStockProducts}`);
 
         // Средний рейтинг
+        console.log('[Dashboard] Calculating average rating...');
         const avgRating = await Review.findAll({
             attributes: [
-                [sequelize.fn('AVG', sequelize.col('rating')), 'average_rating']
+                [Sequelize.fn('AVG', Sequelize.col('rating')), 'average_rating']
             ]
         });
+        console.log('[Dashboard] Average rating:', JSON.stringify(avgRating[0]?.dataValues || {}, null, 2));
 
-        res.json({
-            monthly_orders: orderStats[0].dataValues.total_orders || 0,
-            monthly_revenue: orderStats[0].dataValues.total_revenue || 0,
+        const response = {
+            monthly_orders: orderStats[0]?.dataValues.total_orders || 0,
+            monthly_revenue: orderStats[0]?.dataValues.total_revenue || 0,
             total_customers: customerCount,
             low_stock_products: lowStockProducts,
-            average_rating: avgRating[0].dataValues.average_rating || 0
-        });
+            average_rating: Number(avgRating[0]?.dataValues.average_rating || 0).toFixed(2)
+        };
+        
+        console.log('[Dashboard] Sending response:', JSON.stringify(response, null, 2));
+        res.json(response);
     } catch (error) {
+        console.error('[Dashboard] Error in getGeneralStats:', error);
+        console.error('[Dashboard] Error stack:', error.stack);
         res.status(500).json({ error: error.message });
     }
 };
 
 // Получение статистики продаж по времени
 const getSalesTimeline = async (req, res) => {
+    console.log('[Dashboard] Getting sales timeline...');
     try {
         const { period = 'month' } = req.query;
+        console.log(`[Dashboard] Requested period: ${period}`);
+        
         const today = new Date();
         let startDate;
 
@@ -72,48 +97,68 @@ const getSalesTimeline = async (req, res) => {
             default:
                 startDate = new Date(today.setMonth(today.getMonth() - 1));
         }
+        
+        console.log(`[Dashboard] Calculated start date: ${startDate.toISOString()}`);
 
+        console.log('[Dashboard] Fetching sales data...');
         const sales = await Order.findAll({
             attributes: [
-                [sequelize.fn('DATE', sequelize.col('order_date')), 'date'],
-                [sequelize.fn('COUNT', sequelize.col('order_id')), 'orders'],
-                [sequelize.fn('SUM', sequelize.col('total_amount')), 'revenue']
+                [Sequelize.fn('DATE', Sequelize.col('order_date')), 'date'],
+                [Sequelize.fn('COUNT', Sequelize.col('order_id')), 'orders'],
+                [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'revenue']
             ],
             where: {
                 order_date: {
-                    [Op.gte]: startDate
+                    [Sequelize.Op.gte]: startDate
                 }
             },
-            group: [sequelize.fn('DATE', sequelize.col('order_date'))],
-            order: [[sequelize.fn('DATE', sequelize.col('order_date')), 'ASC']]
+            group: [Sequelize.fn('DATE', Sequelize.col('order_date'))],
+            order: [[Sequelize.fn('DATE', Sequelize.col('order_date')), 'ASC']]
         });
 
+        console.log(`[Dashboard] Found ${sales.length} days with sales data`);
+        console.log('[Dashboard] Sales data sample:', JSON.stringify(sales[0]?.dataValues || {}, null, 2));
+        
         res.json(sales);
     } catch (error) {
+        console.error('[Dashboard] Error in getSalesTimeline:', error);
+        console.error('[Dashboard] Error stack:', error.stack);
         res.status(500).json({ error: error.message });
     }
 };
 
-// Получение топ продаваемых товаров
-const getTopProducts = async (req, res) => {
+// Получение статистики роста числа клиентов
+const getCustomerGrowth = async (req, res) => {
+    console.log('[Dashboard] Getting customer growth stats...');
     try {
-        const topProducts = await Product.findAll({
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+        
+        console.log(`[Dashboard] Date range: ${startOfMonth.toISOString()} - ${today.toISOString()}`);
+
+        const customerGrowth = await User.findAll({
             attributes: [
-                'product_id',
-                'format',
-                [sequelize.fn('SUM', sequelize.col('OrderItems.quantity')), 'total_sold']
+                [Sequelize.fn('DATE', Sequelize.col('createdAt')), 'date'],
+                [Sequelize.fn('COUNT', Sequelize.col('user_id')), 'new_customers']
             ],
-            include: [{
-                model: OrderItem,
-                attributes: []
-            }],
-            group: ['Product.product_id'],
-            order: [[sequelize.fn('SUM', sequelize.col('OrderItems.quantity')), 'DESC']],
-            limit: 10
+            where: {
+                role: 'customer',
+                createdAt: {
+                    [Sequelize.Op.between]: [startOfMonth, today]
+                }
+            },
+            group: [Sequelize.fn('DATE', Sequelize.col('createdAt'))],
+            order: [[Sequelize.fn('DATE', Sequelize.col('createdAt')), 'ASC']],
+            raw: true
         });
 
-        res.json(topProducts);
+        console.log(`[Dashboard] Found customer growth data for ${customerGrowth.length} days`);
+        console.log('[Dashboard] Growth data sample:', JSON.stringify(customerGrowth[0] || {}, null, 2));
+        
+        res.json(customerGrowth);
     } catch (error) {
+        console.error('[Dashboard] Error in getCustomerGrowth:', error);
+        console.error('[Dashboard] Error stack:', error.stack);
         res.status(500).json({ error: error.message });
     }
 };
@@ -121,5 +166,5 @@ const getTopProducts = async (req, res) => {
 module.exports = {
     getGeneralStats,
     getSalesTimeline,
-    getTopProducts
+    getCustomerGrowth
 }; 

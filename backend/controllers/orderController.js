@@ -3,14 +3,17 @@ const { Order, OrderItem, Product, Album, User, Artist } = require('../models');
 // Создание нового заказа
 const createOrder = async (req, res) => {
     try {
-        const { items } = req.body;
+        const { items, paymentMethod, shippingAddress } = req.body;
         const userId = req.user.userId;
 
         // Создаем заказ
         const order = await Order.create({
             user_id: userId,
             order_date: new Date(),
-            status: 'pending'
+            status: 'new',
+            payment_method: paymentMethod,
+            shipping_address: shippingAddress,
+            total_amount: items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
         });
 
         // Добавляем товары в заказ

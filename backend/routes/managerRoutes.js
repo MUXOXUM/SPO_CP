@@ -5,7 +5,7 @@ const { getAllEmployees, addEmployee, updateEmployee } = require('../controllers
 const { getAllCustomers, updateCustomer } = require('../controllers/customerController');
 const { getAllOrders, updateOrderStatus } = require('../controllers/orderController');
 const { getAllSuppliers, createSupplier, updateSupplier, deleteSupplier } = require('../controllers/supplierController');
-const { getGeneralStats, getSalesTimeline, getTopProducts } = require('../controllers/dashboardController');
+const { getGeneralStats, getSalesTimeline, getCustomerGrowth } = require('../controllers/dashboardController');
 
 // Все маршруты требуют аутентификации и роль менеджера
 router.use(authenticateToken);
@@ -33,6 +33,6 @@ router.delete('/suppliers/:id', deleteSupplier);
 // Маршруты для дашборда
 router.get('/dashboard/stats', getGeneralStats);
 router.get('/dashboard/sales', getSalesTimeline);
-router.get('/dashboard/top-products', getTopProducts);
+router.get('/dashboard/customer-growth', getCustomerGrowth);
 
 module.exports = router; 

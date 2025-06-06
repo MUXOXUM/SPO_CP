@@ -1,12 +1,13 @@
 const { Album, Artist, Genre, Product } = require('../models');
 const { Op } = require('sequelize');
+const sequelize = require('../config/database');
 
 // Получение списка всех альбомов с фильтрацией
 const getAlbums = async (req, res) => {
     try {
         const albums = await Album.findAll({
             attributes: [
-                ['album_id', 'id'],
+                'album_id',
                 'title',
                 'release_year',
                 'duration',
@@ -73,21 +74,18 @@ const getAlbums = async (req, res) => {
 // Получение списка всех форматов
 const getFormats = async (req, res) => {
     try {
+        // Получаем уникальные форматы из таблицы продуктов
         const formats = await Product.findAll({
-            attributes: ['format'],
-            group: ['format'],
-            raw: true
+            attributes: [
+                [sequelize.fn('DISTINCT', sequelize.col('format')), 'format']
+            ]
         });
-        
-        // Преобразуем в формат, ожидаемый фронтендом
-        const formattedFormats = formats
-            .filter(f => f.format)
-            .map(f => ({
-                id: f.format,
-                name: f.format
-            }));
-        
-        console.log('Sending formats:', formattedFormats);
+
+        const formattedFormats = formats.map(format => ({
+            id: format.format,
+            name: format.format
+        }));
+
         res.json(formattedFormats);
     } catch (error) {
         console.error('Error in getFormats:', error);
@@ -163,8 +161,184 @@ const getAlbumDetails = async (req, res) => {
     }
 };
 
+// Добавление нового альбома
+const addAlbum = async (req, res) => {
+    const t = await sequelize.transaction();
+    
+    try {
+        const { title, artist, formatId, price, inStock, label = 'Unknown', releaseYear = new Date().getFullYear() } = req.body;
+
+        // Проверяем обязательные поля
+        if (!title || !artist || !formatId || !price || inStock === undefined) {
+            return res.status(400).json({ 
+                error: 'Validation Error',
+                details: 'Missing required fields. Required: title, artist, formatId, price, inStock' 
+            });
+        }
+
+        // Находим или создаем артиста
+        const [artistRecord] = await Artist.findOrCreate({
+            where: { name: artist },
+            defaults: { name: artist },
+            transaction: t
+        });
+
+        // Находим или создаем жанр (временно используем дефолтный)
+        const [genreRecord] = await Genre.findOrCreate({
+            where: { name: 'Unknown' },
+            defaults: { name: 'Unknown' },
+            transaction: t
+        });
+
+        // Создаем новый альбом
+        const newAlbum = await Album.create({
+            title,
+            artist_id: artistRecord.id,
+            genre_id: genreRecord.id,
+            release_year: releaseYear,
+            duration: 0, // Временное значение
+            label
+        }, { transaction: t });
+
+        // Создаем продукт для альбома
+        const newProduct = await Product.create({
+            album_id: newAlbum.album_id,
+            format: formatId,
+            price: parseFloat(price),
+            stock_quantity: parseInt(inStock)
+        }, { transaction: t });
+
+        await t.commit();
+
+        res.status(201).json({
+            id: newAlbum.album_id,
+            title,
+            artist,
+            formatId,
+            price: parseFloat(price),
+            inStock: parseInt(inStock),
+            label,
+            releaseYear,
+            genre: 'Unknown'
+        });
+    } catch (error) {
+        await t.rollback();
+        console.error('Error in addAlbum:', error);
+        
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: error.errors.map(err => ({
+                    field: err.path,
+                    message: err.message
+                }))
+            });
+        }
+
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            message: 'Failed to create album'
+        });
+    }
+};
+
+// Обновление альбома
+const updateAlbum = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, artist, formatId, price, inStock } = req.body;
+
+        const album = await Album.findByPk(id);
+        if (!album) {
+            return res.status(404).json({ error: 'Album not found' });
+        }
+
+        // Обновляем артиста если нужно
+        const [artistRecord] = await Artist.findOrCreate({
+            where: { name: artist },
+            defaults: { name: artist }
+        });
+
+        // Обновляем альбом
+        await album.update({
+            title,
+            artist_id: artistRecord.id
+        });
+
+        // Обновляем или создаем продукт
+        await Product.upsert({
+            album_id: id,
+            format: formatId,
+            price: price,
+            stock_quantity: inStock
+        });
+
+        res.json({
+            id: album.album_id,
+            title,
+            artist,
+            formatId,
+            price,
+            inStock
+        });
+    } catch (error) {
+        console.error('Error in updateAlbum:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Удаление альбома
+const deleteAlbum = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const album = await Album.findByPk(id);
+        if (!album) {
+            return res.status(404).json({ error: 'Album not found' });
+        }
+
+        // Начинаем транзакцию
+        const t = await sequelize.transaction();
+
+        try {
+            // Сначала удаляем связанные записи в OrderItems
+            await sequelize.query(
+                'DELETE FROM "OrderItems" WHERE product_id IN (SELECT product_id FROM "Products" WHERE album_id = :albumId)',
+                {
+                    replacements: { albumId: id },
+                    type: sequelize.QueryTypes.DELETE,
+                    transaction: t
+                }
+            );
+
+            // Затем удаляем продукты
+            await Product.destroy({
+                where: { album_id: id },
+                transaction: t
+            });
+
+            // Наконец, удаляем сам альбом
+            await album.destroy({ transaction: t });
+
+            // Если всё прошло успешно, фиксируем транзакцию
+            await t.commit();
+            res.status(204).send();
+        } catch (error) {
+            // В случае ошибки откатываем все изменения
+            await t.rollback();
+            throw error;
+        }
+    } catch (error) {
+        console.error('Error in deleteAlbum:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getAlbums,
     getAlbumDetails,
+    addAlbum,
+    updateAlbum,
+    deleteAlbum,
     getFormats
 }; 

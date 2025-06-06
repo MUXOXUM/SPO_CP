@@ -17,39 +17,39 @@
             <span class="material-icons">payments</span>
           </div>
           <div class="stat-info">
-            <h3>Общая выручка</h3>
-            <p class="stat-value">{{ formatPrice(stats.totalRevenue) }} ₽</p>
+            <h3>Выручка за месяц</h3>
+            <p class="stat-value">{{ formatPrice(stats.monthly_revenue) }} ₽</p>
             <p class="stat-label">За последние 30 дней</p>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">
-            <span class="material-icons">album</span>
+            <span class="material-icons">shopping_cart</span>
           </div>
           <div class="stat-info">
-            <h3>Продано альбомов</h3>
-            <p class="stat-value">{{ stats.totalSales }}</p>
+            <h3>Заказов за месяц</h3>
+            <p class="stat-value">{{ stats.monthly_orders }}</p>
             <p class="stat-label">За последние 30 дней</p>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">
-            <span class="material-icons">shopping_bag</span>
+            <span class="material-icons">group</span>
           </div>
           <div class="stat-info">
-            <h3>Новых заказов</h3>
-            <p class="stat-value">{{ stats.newOrders }}</p>
-            <p class="stat-label">За сегодня</p>
+            <h3>Активных клиентов</h3>
+            <p class="stat-value">{{ stats.total_customers }}</p>
+            <p class="stat-label">Всего</p>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">
-            <span class="material-icons">trending_up</span>
+            <span class="material-icons">inventory_2</span>
           </div>
           <div class="stat-info">
-            <h3>Топ формат</h3>
-            <p class="stat-value">{{ stats.topFormat }}</p>
-            <p class="stat-label">По продажам</p>
+            <h3>Товары на складе</h3>
+            <p class="stat-value">{{ stats.low_stock_products }}</p>
+            <p class="stat-label">Заканчиваются (< 5 шт)</p>
           </div>
         </div>
       </div>
@@ -61,8 +61,10 @@
           <div class="chart-header">
             <h3>Динамика продаж</h3>
             <div class="chart-legend">
-              <span class="legend-dot"></span>
-              <span>Продажи за период</span>
+              <span class="legend-dot revenue-dot"></span>
+              <span>Выручка</span>
+              <span class="legend-dot orders-dot"></span>
+              <span>Заказы</span>
             </div>
           </div>
           <div class="chart-container">
@@ -74,20 +76,20 @@
           </div>
         </div>
 
-        <!-- Top Products -->
+        <!-- Customer Growth -->
         <div class="chart-card">
           <div class="chart-header">
-            <h3>Топ продаваемых альбомов</h3>
+            <h3>Прирост клиентов</h3>
             <div class="chart-legend">
-              <span class="legend-dot"></span>
-              <span>Количество продаж</span>
+              <span class="legend-dot customers-dot"></span>
+              <span>Новые клиенты</span>
             </div>
           </div>
           <div class="chart-container">
-            <Bar
-              v-if="topProductsChartData"
-              :data="topProductsChartData"
-              :options="topProductsChartOptions"
+            <Line
+              v-if="customerGrowthData"
+              :data="customerGrowthData"
+              :options="customerGrowthOptions"
             />
           </div>
         </div>
@@ -98,14 +100,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Line, Bar } from 'vue-chartjs';
+import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
   Legend
@@ -118,7 +119,6 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
   Legend
@@ -126,15 +126,16 @@ ChartJS.register(
 
 // Stats data
 const stats = ref({
-  totalRevenue: 0,
-  totalSales: 0,
-  newOrders: 0,
-  topFormat: '-'
+  monthly_orders: 0,
+  monthly_revenue: 0,
+  total_customers: 0,
+  low_stock_products: 0,
+  average_rating: 0
 });
 
 // Chart data
 const salesChartData = ref(null);
-const topProductsChartData = ref(null);
+const customerGrowthData = ref(null);
 
 // Chart options
 const salesChartOptions = {
@@ -160,23 +161,25 @@ const salesChartOptions = {
   }
 };
 
-const topProductsChartOptions = {
+const customerGrowthOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  indexAxis: 'y',
   plugins: {
     legend: {
       display: false
     }
   },
   scales: {
-    x: {
+    y: {
       beginAtZero: true,
       grid: {
         color: '#e0e0e0'
+      },
+      ticks: {
+        stepSize: 1
       }
     },
-    y: {
+    x: {
       grid: {
         display: false
       }
@@ -187,36 +190,62 @@ const topProductsChartOptions = {
 // Fetch dashboard data
 const fetchDashboardData = async () => {
   try {
-    const [statsResponse, salesResponse, topProductsResponse] = await Promise.all([
-      axios.get('/api/manager/dashboard/stats'),
-      axios.get('/api/manager/dashboard/sales'),
-      axios.get('/api/manager/dashboard/top-products')
-    ]);
-
-    // Update stats
+    // Получаем общую статистику
+    const statsResponse = await axios.get('/api/manager/dashboard/stats');
     stats.value = statsResponse.data;
 
-    // Update sales timeline chart
+    // Получаем данные по продажам
+    const salesResponse = await axios.get('/api/manager/dashboard/sales');
     salesChartData.value = {
-      labels: salesResponse.data.map(item => item.date),
-      datasets: [{
-        label: 'Продажи',
-        data: salesResponse.data.map(item => item.amount),
-        borderColor: '#2e7d32',
-        backgroundColor: 'rgba(46, 125, 50, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
+      labels: salesResponse.data.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+      }),
+      datasets: [
+        {
+          label: 'Выручка',
+          data: salesResponse.data.map(item => item.revenue),
+          borderColor: '#2e7d32',
+          backgroundColor: 'rgba(46, 125, 50, 0.1)',
+          yAxisID: 'y',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Заказы',
+          data: salesResponse.data.map(item => item.orders),
+          borderColor: '#1976d2',
+          backgroundColor: 'rgba(25, 118, 210, 0.1)',
+          yAxisID: 'y1',
+          fill: true,
+          tension: 0.4
+        }
+      ]
     };
 
-    // Update top products chart
-    topProductsChartData.value = {
-      labels: topProductsResponse.data.map(item => item.title),
+    // Обновляем опции для двух осей Y
+    salesChartOptions.scales.y1 = {
+      position: 'right',
+      grid: {
+        drawOnChartArea: false
+      },
+      beginAtZero: true
+    };
+
+    // Получаем данные по росту клиентов
+    const customerGrowthResponse = await axios.get('/api/manager/dashboard/customer-growth');
+    customerGrowthData.value = {
+      labels: customerGrowthResponse.data.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+      }),
       datasets: [{
-        label: 'Продажи',
-        data: topProductsResponse.data.map(item => item.sales),
-        backgroundColor: '#2e7d32',
-        borderRadius: 4
+        label: 'Новые клиенты',
+        data: customerGrowthResponse.data.map(item => item.new_customers),
+        borderColor: '#9c27b0',
+        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+        fill: true,
+        tension: 0.4
       }]
     };
   } catch (error) {
@@ -226,7 +255,7 @@ const fetchDashboardData = async () => {
 
 // Format price
 const formatPrice = (price) => {
-  return new Intl.NumberFormat('ru-RU').format(price);
+  return new Intl.NumberFormat('ru-RU').format(price || 0);
 };
 
 // Fetch data on component mount
@@ -384,7 +413,7 @@ onMounted(() => {
 .chart-legend {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
   color: #666;
   font-size: 0.875rem;
 }
@@ -393,7 +422,18 @@ onMounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+}
+
+.revenue-dot {
   background-color: #2e7d32;
+}
+
+.orders-dot {
+  background-color: #1976d2;
+}
+
+.customers-dot {
+  background-color: #9c27b0;
 }
 
 .chart-container {

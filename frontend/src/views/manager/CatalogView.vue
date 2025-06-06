@@ -37,56 +37,70 @@
       <table class="albums-table">
         <thead>
           <tr>
-            <th>Название</th>
-            <th>Лейбл</th>
-            <th>Исполнитель</th>
-            <th>Год</th>
-            <th>Жанр</th>
-            <th>Формат</th>
-            <th>Цена</th>
-            <th>В наличии</th>
-            <th>Действия</th>
+            <th><div class="cell-content">Название</div></th>
+            <th><div class="cell-content">Лейбл</div></th>
+            <th><div class="cell-content">Исполнитель</div></th>
+            <th><div class="cell-content">Год</div></th>
+            <th><div class="cell-content">Жанр</div></th>
+            <th><div class="cell-content">Формат</div></th>
+            <th><div class="cell-content">Цена</div></th>
+            <th><div class="cell-content">В наличии</div></th>
+            <th><div class="cell-content">Действия</div></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="album in filteredAlbums" :key="album.id">
             <td>
-              <img 
-                :src="album.coverImage || '/placeholder.jpg'" 
-                :alt="album.title"
-                class="album-cover"
-              >
-            </td>
-            <td>
-              <div class="album-info">
-                <span class="album-label">{{ album.label }}</span>
+              <div class="cell-content">
+                <img 
+                  :src="album.coverImage || '/placeholder.jpg'" 
+                  :alt="album.title"
+                  class="album-cover"
+                >
               </div>
             </td>
-            <td>{{ album.artist }}</td>
-            <td>{{ album.releaseYear }}</td>
             <td>
-              <span class="genre-badge">
-                {{ album.genre }}
-              </span>
+              <div class="cell-content">
+                <div class="album-info">
+                  <span class="album-label">{{ album.label }}</span>
+                </div>
+              </div>
+            </td>
+            <td><div class="cell-content">{{ album.artist }}</div></td>
+            <td><div class="cell-content">{{ album.releaseYear }}</div></td>
+            <td>
+              <div class="cell-content">
+                <span class="genre-badge">
+                  {{ album.genre }}
+                </span>
+              </div>
             </td>
             <td>
-              <span class="format-badge">
-                {{ getFormatName(album.formatId) }}
-              </span>
+              <div class="cell-content">
+                <span class="format-badge">
+                  {{ getFormatName(album.formatId) }}
+                </span>
+              </div>
             </td>
-            <td>{{ formatPrice(album.price) }} ₽</td>
+            <td><div class="cell-content">{{ formatPrice(album.price) }} ₽</div></td>
             <td>
-              <span class="stock-badge" :class="{ low: album.inStock < 5 }">
-                {{ album.inStock }}
-              </span>
+              <div class="cell-content">
+                <span class="stock-badge" :class="{ low: album.inStock < 5 }">
+                  {{ album.inStock }}
+                </span>
+              </div>
             </td>
-            <td class="actions">
-              <button @click="editAlbum(album)" class="icon-btn edit-btn" title="Изменить">
-                <span class="material-icons">edit</span>
-              </button>
-              <button @click="confirmDelete(album)" class="icon-btn delete-btn" title="Удалить">
-                <span class="material-icons">delete</span>
-              </button>
+            <td>
+              <div class="cell-content">
+                <div class="actions">
+                  <button @click="editAlbum(album)" class="icon-btn edit-btn" title="Изменить">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button @click="confirmDelete(album)" class="icon-btn delete-btn" title="Удалить">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -458,44 +472,128 @@ onMounted(() => {
 .albums-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
+/* Reset table cell styles */
 .albums-table th,
 .albums-table td {
-  padding: 1rem;
-  text-align: left;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Base row styling */
+.albums-table tr {
+  height: 72px;
   border-bottom: 1px solid #f0f0f0;
 }
 
+/* Cell content wrapper */
+.cell-content {
+  height: 100%;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Header cells */
 .albums-table th {
   background-color: #f8f9fa;
   font-weight: 600;
   color: #666;
 }
 
-.album-cover {
-  width: 48px;
-  height: 48px;
+/* Column widths */
+.albums-table th:nth-child(1) { width: 20%; }  /* Название */
+.albums-table th:nth-child(2) { width: 12%; }  /* Лейбл */
+.albums-table th:nth-child(3) { width: 15%; }  /* Исполнитель */
+.albums-table th:nth-child(4) { width: 80px; } /* Год */
+.albums-table th:nth-child(5) { width: 10%; }  /* Жанр */
+.albums-table th:nth-child(6) { width: 10%; }  /* Формат */
+.albums-table th:nth-child(7) { width: 100px; } /* Цена */
+.albums-table th:nth-child(8) { width: 100px; } /* В наличии */
+.albums-table th:nth-child(9) { width: 120px; } /* Действия */
+
+/* Actions container */
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 100%;
+}
+
+/* Action buttons */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+.icon-btn .material-icons {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.edit-btn {
+  color: #2e7d32;
+}
+
+.delete-btn {
+  color: #d32f2f;
+}
+
+.edit-btn:hover {
+  background-color: rgba(46, 125, 50, 0.1);
+}
+
+.delete-btn:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+}
+
+/* Badges */
+.genre-badge,
+.format-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
   border-radius: 4px;
-  object-fit: cover;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.genre-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .format-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
   background-color: #e8f5e9;
   color: #2e7d32;
-  border-radius: 4px;
-  font-size: 0.875rem;
 }
 
 .stock-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
   background-color: #e8f5e9;
   color: #2e7d32;
-  border-radius: 4px;
-  font-weight: 500;
 }
 
 .stock-badge.low {
@@ -503,42 +601,26 @@ onMounted(() => {
   color: #d32f2f;
 }
 
-.actions {
+.album-cover {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  display: block;
+}
+
+.album-info {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: none;
-}
-
-.icon-btn .material-icons {
-  font-size: 20px;
-}
-
-.edit-btn {
-  color: #2e7d32;
-}
-
-.edit-btn:hover {
-  background-color: #e8f5e9;
-}
-
-.delete-btn {
-  color: #d32f2f;
-}
-
-.delete-btn:hover {
-  background-color: #ffebee;
+.album-label {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Modal styles */
@@ -712,31 +794,6 @@ onMounted(() => {
   background-color: #1b5e20;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-}
-
-.album-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.album-title {
-  font-weight: 500;
-  color: #333;
-}
-
-.album-label {
-  font-size: 0.875rem;
-  color: #666;
-}
-
-.genre-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border-radius: 4px;
-  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {
