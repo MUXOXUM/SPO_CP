@@ -457,7 +457,12 @@ onMounted(() => {
 
 .albums-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.albums-table tr {
+  height: 80px;
 }
 
 .albums-table th,
@@ -465,12 +470,9 @@ onMounted(() => {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #f0f0f0;
-}
-
-.albums-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #666;
+  vertical-align: middle;
+  height: 80px;
+  box-sizing: border-box;
 }
 
 .album-cover {
@@ -478,51 +480,50 @@ onMounted(() => {
   height: 48px;
   border-radius: 4px;
   object-fit: cover;
+  display: block;
 }
 
-.format-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 4px;
-  font-size: 0.875rem;
-}
-
+.album-info,
+.genre-badge,
+.format-badge,
 .stock-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.stock-badge.low {
-  background-color: #ffebee;
-  color: #d32f2f;
+  display: flex;
+  align-items: center;
+  height: 48px;
 }
 
 .actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+  height: 50px;
+  box-sizing: border-box;
 }
 
 .icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 50px;
+  height: 50px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
   background: none;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .icon-btn .material-icons {
-  font-size: 20px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .edit-btn {
