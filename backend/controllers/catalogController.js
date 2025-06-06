@@ -6,7 +6,7 @@ const getAlbums = async (req, res) => {
     try {
         const albums = await Album.findAll({
             attributes: [
-                ['album_id', 'id'],
+                'album_id',
                 'title',
                 'release_year',
                 'duration',
