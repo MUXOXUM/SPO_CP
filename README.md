@@ -148,14 +148,14 @@ INSERT INTO "Products" (product_id, format, price, stock_quantity, barcode, cond
 ## Пользователи (`Users`)
 
 ```sql
-INSERT INTO users (
-    user_id, email, password, role, first_name, last_name, phone, address, position, hire_date, salary, is_active, createdAt, updatedAt
+INSERT INTO "Users" (
+    user_id, email, password, role, first_name, last_name, phone, address, position, hire_date, salary, is_active, "createdAt", "updatedAt"
 ) VALUES
-(1, 'alex@gmail.com', '$2b$10$dFePKDTAaolkTHpEnKHL..eNGrN7BCCIFw3JsAiSngzS1wvgGNl7.', 'customer', 'Алексей', 'Черников', '78902341576', NULL, NULL, NULL, NULL, true, '2025-06-02 21:02:54.187+03', '2025-06-02 21:02:54.187+03'),
-(2, 'bob@gmail.com', '$2b$10$ztoSxzSSHgge2t2PSnc2F.QFXSp/ELcL2eSeetVEeGyZcPCc84gyO', 'manager', 'Боб', 'Фомин', '78453217456', NULL, NULL, NULL, NULL, true, '2025-06-02 21:04:36.344+03', '2025-06-02 21:04:36.344+03'),
-(3, 'liza@gmail.com', '$2b$10$vqMaHKipzRHR1qeiQdPb/u497faa1xOF1NZMOuUoT0BbzJk6TjG.S', 'customer', 'Елизавета', 'Нагиева', '78903216565', NULL, NULL, NULL, NULL, true, '2025-06-02 21:22:39.132+03', '2025-06-02 21:22:39.132+03'),
-(4, 'pavel@gmail.com', '$2b$10$sYxLGwLwItnSr2eRiWRW..NLEymnz9t8kpWLdnqjWWTqiERiaQGxC', 'customer', 'Павел', 'Викторович', '78934514328', NULL, NULL, NULL, NULL, true, '2025-06-02 21:23:12.635+03', '2025-06-02 21:23:12.635+03'),
-(5, 'grig@gmail.com', '$2b$10$qDXHvdkkYFEk7S12QQ4NpOoKQhKIp9kZL2QVtuekb5dc7H3ye2U5O', 'customer', 'Григ', 'Скандинавский', '74385767612', NULL, NULL, NULL, NULL, true, '2025-06-02 21:51:09.104+03', '2025-06-02 21:51:09.104+03');
+(1, 'alex@gmail.com', '$2b$10$dFePKDTAaolkTHpEnKHL..eNGrN7BCCIFw3JsAiSngzS1wvgGNl7.', 'customer', 'Алексей', 'Черников', '78902341576', NULL::character varying, NULL::character varying, NULL::timestamptz, NULL::numeric, true, '2025-06-02 21:02:54.187+03', '2025-06-02 21:02:54.187+03'),
+(2, 'bob@gmail.com', '$2b$10$ztoSxzSSHgge2t2PSnc2F.QFXSp/ELcL2eSeetVEeGyZcPCc84gyO', 'manager', 'Боб', 'Фомин', '78453217456', NULL::character varying, NULL::character varying, NULL::timestamptz, NULL::numeric, true, '2025-06-02 21:04:36.344+03', '2025-06-02 21:04:36.344+03'),
+(3, 'liza@gmail.com', '$2b$10$vqMaHKipzRHR1qeiQdPb/u497faa1xOF1NZMOuUoT0BbzJk6TjG.S', 'customer', 'Елизавета', 'Нагиева', '78903216565', NULL::character varying, NULL::character varying, NULL::timestamptz, NULL::numeric, true, '2025-06-02 21:22:39.132+03', '2025-06-02 21:22:39.132+03'),
+(4, 'pavel@gmail.com', '$2b$10$sYxLGwLwItnSr2eRiWRW..NLEymnz9t8kpWLdnqjWWTqiERiaQGxC', 'customer', 'Павел', 'Викторович', '78934514328', NULL::character varying, NULL::character varying, NULL::timestamptz, NULL::numeric, true, '2025-06-02 21:23:12.635+03', '2025-06-02 21:23:12.635+03'),
+(5, 'grig@gmail.com', '$2b$10$qDXHvdkkYFEk7S12QQ4NpOoKQhKIp9kZL2QVtuekb5dc7H3ye2U5O', 'customer', 'Григ', 'Скандинавский', '74385767612', NULL::character varying, NULL::character varying, NULL::timestamptz, NULL::numeric, true, '2025-06-02 21:51:09.104+03', '2025-06-02 21:51:09.104+03');
 ```
 
 ## Заказы (`Orders`)
@@ -209,19 +209,13 @@ INSERT INTO "Suppliers" (supplier_id, name, contact_person, email, phone, addres
 (3, 'VinylHouse', 'Дмитрий Смирнов', 'smirnov@vinylhouse.com', '+7 (495) 789-01-23', 'Москва, ул. Граммофонная, д. 15'),
 (4, 'MusicWorld', 'Сергей Кузнецов', 'sergey@musicworld.com', '+7 (383) 654-32-10', 'Новосибирск, ул. Музыкальная, д. 5'),
 (5, 'АудиоИмпорт', 'Елена Федорова', 'elena@audioimport.ru', '+7 (812) 987-65-43', 'Санкт-Петербург, проспект Звуковой, д. 8');
-INSERT INTO "Suppliers" (supplier_id, name, contact_person, email, phone, address) VALUES
-(1, 'Музыка-Маркет', 'Иван Иванов', 'ivanov@musicmarket.ru', '+7 (495) 123-45-67', 'Москва, ул. Мелодийная, д. 10'),
-(2, 'Звуки Планеты', 'Анна Петрова', 'anna@planet-sound.com', '+7 (812) 234-56-78', 'Санкт-Петербург, ул. Литейная, д. 20'),
-(3, 'VinylHouse', 'Дмитрий Смирнов', 'smirnov@vinylhouse.com', '+7 (495) 789-01-23', 'Москва, ул. Граммофонная, д. 15'),
-(4, 'MusicWorld', 'Сергей Кузнецов', 'sergey@musicworld.com', '+7 (383) 654-32-10', 'Новосибирск, ул. Музыкальная, д. 5'),
-(5, 'АудиоИмпорт', 'Елена Федорова', 'elena@audioimport.ru', '+7 (812) 987-65-43', 'Санкт-Петербург, проспект Звуковой, д. 8');
 ```
 
 
 ## Элементы поставок (`PurchaseItems`)
 
 ```sql
-INSERT INTO purchase_items (purchase_item_id, quantity, unit_price, purchase_id, product_id) VALUES
+INSERT INTO "PurchaseItem" (purchase_item_id, quantity, unit_price, purchase_id, product_id) VALUES
 -- Поставка 1
 (1, 10, 499.99, 1, 1),
 (2, 5, 1299.50, 1, 2),
