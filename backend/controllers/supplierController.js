@@ -28,6 +28,41 @@ const createSupplier = async (req, res) => {
     try {
         const { name, contactPerson, email, phone, address } = req.body;
 
+        // Проверка обязательных полей
+        if (!name || !contactPerson || !email || !phone || !address) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: 'Все поля обязательны для заполнения'
+            });
+        }
+
+        // Валидация email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: 'Неверный формат email'
+            });
+        }
+
+        // Валидация телефона (простая проверка на наличие только цифр и некоторых спецсимволов)
+        const phoneRegex = /^[+\d\s()-]+$/;
+        if (!phoneRegex.test(phone)) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: 'Неверный формат телефона'
+            });
+        }
+
+        // Проверка на существование поставщика с таким же email
+        const existingSupplier = await Supplier.findOne({ where: { email } });
+        if (existingSupplier) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: 'Поставщик с таким email уже существует'
+            });
+        }
+
         const supplier = await Supplier.create({
             name,
             contact_person: contactPerson,
@@ -46,7 +81,27 @@ const createSupplier = async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating supplier:', error);
-        res.status(500).json({ error: 'Ошибка при создании поставщика' });
+        
+        // Обработка ошибок валидации Sequelize
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: error.errors.map(err => err.message).join(', ')
+            });
+        }
+
+        // Обработка ошибок уникальности Sequelize
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({
+                error: 'Validation Error',
+                details: 'Поставщик с такими данными уже существует'
+            });
+        }
+
+        res.status(500).json({ 
+            error: 'Ошибка при создании поставщика',
+            details: 'Произошла внутренняя ошибка сервера'
+        });
     }
 };
 

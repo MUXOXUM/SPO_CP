@@ -67,6 +67,9 @@
             </button>
           </div>
           <form @submit.prevent="handleSubmit" class="supplier-form">
+            <div v-if="formError" class="error-message">
+              {{ formError }}
+            </div>
             <div class="form-group">
               <label>Название компании:</label>
               <input 
@@ -116,9 +119,9 @@
               <button type="button" @click="closeModal" class="cancel-btn">
                 <span>Отмена</span>
               </button>
-              <button type="submit" class="save-btn">
+              <button type="submit" class="save-btn" :disabled="isSubmitting">
                 <span class="material-icons">save</span>
-                <span>Сохранить</span>
+                <span>{{ isSubmitting ? 'Сохранение...' : 'Сохранить' }}</span>
               </button>
             </div>
           </form>
@@ -163,6 +166,8 @@ const showModal = ref(false);
 const showDeleteModal = ref(false);
 const isEditing = ref(false);
 const selectedSupplier = ref(null);
+const formError = ref('');
+const isSubmitting = ref(false);
 
 const supplierForm = ref({
   name: '',
@@ -223,15 +228,28 @@ const deleteSupplier = (supplier) => {
 
 const handleSubmit = async () => {
   try {
-    if (isEditing.value) {
-      await axios.put(`http://localhost:3000/api/manager/suppliers/${selectedSupplier.value.id}`, supplierForm.value);
-    } else {
-      await axios.post('http://localhost:3000/api/manager/suppliers', supplierForm.value);
-    }
+    isSubmitting.value = true;
+    formError.value = '';
+
+    const endpoint = isEditing.value 
+      ? `http://localhost:3000/api/manager/suppliers/${selectedSupplier.value.id}`
+      : 'http://localhost:3000/api/manager/suppliers';
+
+    const method = isEditing.value ? 'put' : 'post';
+
+    const response = await axios[method](endpoint, supplierForm.value);
+    
     await fetchSuppliers();
     closeModal();
   } catch (error) {
     console.error('Error saving supplier:', error);
+    if (error.response?.data?.details) {
+      formError.value = error.response.data.details;
+    } else {
+      formError.value = 'Произошла ошибка при сохранении поставщика';
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -248,6 +266,8 @@ const confirmDelete = async () => {
 const closeModal = () => {
   showModal.value = false;
   selectedSupplier.value = null;
+  formError.value = '';
+  isSubmitting.value = false;
   supplierForm.value = {
     name: '',
     contactPerson: '',
@@ -573,6 +593,22 @@ onMounted(() => {
   background-color: #1b5e20;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.save-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
